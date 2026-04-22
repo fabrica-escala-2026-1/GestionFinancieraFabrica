@@ -1,0 +1,1 @@
+[![CI - Tests & Quality](https://github.com/fabrica-escala-2026-1/GestionFinancieraFabrica/actions/workflows/ci.yml/badge.svg?branch=main&event=check_run)](https://github.com/fabrica-escala-2026-1/GestionFinancieraFabrica/actions/workflows/ci.yml)
