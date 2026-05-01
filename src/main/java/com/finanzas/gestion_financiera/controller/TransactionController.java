@@ -1,5 +1,6 @@
 package com.finanzas.gestion_financiera.controller;
 
+import com.finanzas.gestion_financiera.dto.ResumenGastosMensualesResponse;
 import com.finanzas.gestion_financiera.dto.TransactionRequest;
 import com.finanzas.gestion_financiera.dto.TransactionResponse;
 import com.finanzas.gestion_financiera.service.TransactionService;
@@ -38,6 +39,16 @@ public class TransactionController {
                 linkTo(methodOn(TransactionController.class).listar()).withSelfRel()
         );
         return ResponseEntity.ok(collection);
+    }
+
+    @GetMapping("/gastos-por-categoria")
+    public ResponseEntity<ResumenGastosMensualesResponse> obtenerGastosPorCategoria(
+            @RequestParam Integer anio,
+            @RequestParam Integer mes) {
+
+        return ResponseEntity.ok(
+                transactionService.obtenerResumenGastosPorCategoria(anio, mes)
+        );
     }
 
     private void agregarLinks(TransactionResponse response) {
