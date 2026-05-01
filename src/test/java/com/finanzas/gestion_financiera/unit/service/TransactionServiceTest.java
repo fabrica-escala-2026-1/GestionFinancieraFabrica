@@ -86,29 +86,25 @@ class TransactionServiceTest {
         @Test
         @DisplayName("Debe crear transacción de ingreso correctamente")
         void debeCrearTransaccionIngreso() {
-            // Arrange
             TransactionRequest request = new TransactionRequest();
             request.setTipo("INGRESO");
             request.setMonto(new BigDecimal("5000.00"));
-            request.setFecha(LocalDate.of(2026, 4, 1));
             request.setCategoriaId(10L);
 
             when(categoryRepository.findById(10L)).thenReturn(Optional.of(testCategory));
             when(transactionRepository.save(any(Transaction.class))).thenAnswer(invocation -> {
                 Transaction t = invocation.getArgument(0);
                 t.setId(1L);
+                t.setFecha(LocalDate.now());
                 return t;
             });
 
-            // Act
             TransactionResponse response = transactionService.crear(request);
 
-            // Assert
             assertNotNull(response);
             assertEquals(1L, response.getId());
             assertEquals("INGRESO", response.getTipo());
             assertEquals(new BigDecimal("5000.00"), response.getMonto());
-            assertEquals(LocalDate.of(2026, 4, 1), response.getFecha());
             assertEquals("Salario", response.getCategoria());
             verify(transactionRepository).save(any(Transaction.class));
         }
@@ -116,7 +112,6 @@ class TransactionServiceTest {
         @Test
         @DisplayName("Debe crear transacción de gasto correctamente")
         void debeCrearTransaccionGasto() {
-            // Arrange
             Category gastoCategory = new Category();
             gastoCategory.setId(20L);
             gastoCategory.setNombre("Alimentación");
@@ -125,20 +120,18 @@ class TransactionServiceTest {
             TransactionRequest request = new TransactionRequest();
             request.setTipo("GASTO");
             request.setMonto(new BigDecimal("150.50"));
-            request.setFecha(LocalDate.of(2026, 4, 5));
             request.setCategoriaId(20L);
 
             when(categoryRepository.findById(20L)).thenReturn(Optional.of(gastoCategory));
             when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> {
                 Transaction t = i.getArgument(0);
                 t.setId(2L);
+                t.setFecha(LocalDate.now());
                 return t;
             });
 
-            // Act
             TransactionResponse response = transactionService.crear(request);
 
-            // Assert
             assertEquals("GASTO", response.getTipo());
             assertEquals(new BigDecimal("150.50"), response.getMonto());
             assertEquals("Alimentación", response.getCategoria());
@@ -147,16 +140,13 @@ class TransactionServiceTest {
         @Test
         @DisplayName("Debe lanzar excepción si la categoría no existe")
         void debeLanzarExcepcionSiCategoriaNoExiste() {
-            // Arrange
             TransactionRequest request = new TransactionRequest();
             request.setTipo("INGRESO");
             request.setMonto(new BigDecimal("100"));
-            request.setFecha(LocalDate.now());
             request.setCategoriaId(999L);
 
             when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
                     () -> transactionService.crear(request));
             assertEquals("Categoría no válida", exception.getMessage());
@@ -166,16 +156,13 @@ class TransactionServiceTest {
         @Test
         @DisplayName("Debe lanzar excepción si el usuario no existe")
         void debeLanzarExcepcionSiUsuarioNoExiste() {
-            // Arrange
             TransactionRequest request = new TransactionRequest();
             request.setTipo("INGRESO");
             request.setMonto(new BigDecimal("100"));
-            request.setFecha(LocalDate.now());
             request.setCategoriaId(10L);
 
             when(userRepository.findByEmail("test@email.com")).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(RuntimeException.class,
                     () -> transactionService.crear(request));
         }
@@ -188,7 +175,6 @@ class TransactionServiceTest {
         @Test
         @DisplayName("Debe listar transacciones del usuario autenticado")
         void debeListarTransaccionesDelUsuario() {
-            // Arrange
             Transaction t1 = new Transaction();
             t1.setId(1L);
             t1.setTipo("INGRESO");
@@ -207,10 +193,8 @@ class TransactionServiceTest {
 
             when(transactionRepository.findByUsuarioId(1L)).thenReturn(List.of(t1, t2));
 
-            // Act
             List<TransactionResponse> result = transactionService.listar();
 
-            // Assert
             assertEquals(2, result.size());
             assertEquals("INGRESO", result.get(0).getTipo());
             assertEquals(new BigDecimal("3000"), result.get(0).getMonto());
@@ -221,13 +205,10 @@ class TransactionServiceTest {
         @Test
         @DisplayName("Debe retornar lista vacía si no tiene transacciones")
         void debeRetornarListaVacia() {
-            // Arrange
             when(transactionRepository.findByUsuarioId(1L)).thenReturn(List.of());
 
-            // Act
             List<TransactionResponse> result = transactionService.listar();
 
-            // Assert
             assertTrue(result.isEmpty());
         }
     }

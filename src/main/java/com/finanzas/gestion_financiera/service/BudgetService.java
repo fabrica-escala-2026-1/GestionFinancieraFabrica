@@ -1,5 +1,4 @@
 package com.finanzas.gestion_financiera.service;
-
 import com.finanzas.gestion_financiera.dto.BudgetRequest;
 import com.finanzas.gestion_financiera.dto.BudgetResponse;
 import com.finanzas.gestion_financiera.entity.Budget;
@@ -8,13 +7,17 @@ import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.BudgetRepository;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
 import com.finanzas.gestion_financiera.repository.UserRepository;
+import com.finanzas.gestion_financiera.dto.BudgetComparisonResponse;
+import com.finanzas.gestion_financiera.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class BudgetService {
     private final BudgetRepository budgetRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     public BudgetResponse create(BudgetRequest request) {
         User user = getAuthenticatedUser();
@@ -107,5 +111,68 @@ public class BudgetService {
                 budget.getStartDate(),
                 budget.getEndDate()
         );
+    }
+
+    public List<BudgetComparisonResponse> comparativa() {
+        User user = getAuthenticatedUser();
+
+        // Obtener todas las categorías del usuario
+        List<Category> categorias = categoryRepository.findByUsuarioId(user.getId());
+
+        return categorias.stream()
+                .filter(c -> c.getTipo().name().equals("GASTO"))
+                .map(category -> {
+
+                    // Buscar si tiene presupuesto activo
+                    Optional<Budget> budgetOpt = budgetRepository
+                            .findActiveByCategoryIdAndUserId(category.getId(), LocalDate.now());
+
+                    // Sumar gastos del período
+                    LocalDate startDate = budgetOpt
+                            .map(Budget::getStartDate)
+                            .orElse(LocalDate.now().withDayOfMonth(1));
+                    LocalDate endDate = budgetOpt
+                            .map(Budget::getEndDate)
+                            .orElse(LocalDate.now());
+
+                    BigDecimal gastado = transactionRepository.sumGastosByCategoryAndPeriod(
+                            category.getId(), user.getId(), startDate, endDate);
+
+                    // Sin presupuesto — Escenario 4
+                    if (budgetOpt.isEmpty()) {
+                        return new BudgetComparisonResponse(
+                                category.getNombre(), null, gastado, null, null, null);
+                    }
+
+                    Budget budget = budgetOpt.get();
+                    BigDecimal limite = budget.getAmount();
+                    BigDecimal disponible = limite.subtract(gastado);
+
+                    double porcentaje = gastado
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(limite, 2, RoundingMode.HALF_UP)
+                            .doubleValue();
+
+                    // Determinar alerta
+                    String alerta = null;
+                    if (porcentaje > 100) {
+                        // Escenario 3 — Excedido
+                        BigDecimal excedido = gastado.subtract(limite);
+                        alerta = "Has excedido el presupuesto de " + category.getNombre()
+                                + " en " + excedido + " COP";
+                    } else if (porcentaje >= 80) {
+                        // Escenario 2 — Cerca del límite
+                        alerta = "Has superado el 80% del presupuesto de "
+                                + category.getNombre();
+                    } else {
+                        // Escenario 1 — Normal
+                        alerta = "Llevas el " + porcentaje + "% del presupuesto de "
+                                + category.getNombre() + " utilizado";
+                    }
+
+                    return new BudgetComparisonResponse(
+                            category.getNombre(), limite, gastado, disponible, porcentaje, alerta);
+                })
+                .collect(Collectors.toList());
     }
 }

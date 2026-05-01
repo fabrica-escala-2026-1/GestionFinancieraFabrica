@@ -5,6 +5,7 @@ import com.finanzas.gestion_financiera.dto.BudgetResponse;
 import com.finanzas.gestion_financiera.service.BudgetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.finanzas.gestion_financiera.dto.BudgetComparisonResponse;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
@@ -62,5 +63,20 @@ public class BudgetController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         budgetService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/comparativa")
+    public ResponseEntity<CollectionModel<BudgetComparisonResponse>> comparativa() {
+        List<BudgetComparisonResponse> lista = budgetService.comparativa();
+        lista.forEach(b -> b.add(
+                linkTo(methodOn(BudgetController.class).comparativa()).withSelfRel()
+        ));
+        CollectionModel<BudgetComparisonResponse> collection = CollectionModel.of(
+                lista,
+                linkTo(methodOn(BudgetController.class).comparativa()).withSelfRel(),
+                linkTo(methodOn(BudgetController.class).list()).withRel("presupuestos")
+        );
+        return ResponseEntity.ok(collection);
     }
 }
