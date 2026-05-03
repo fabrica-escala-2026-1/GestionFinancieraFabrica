@@ -5,6 +5,11 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      data-source-properties:
+        prepareThreshold: 0
+        preparedStatementCacheQueries: 0
+        preparedStatementCacheSizeMiB: 0
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,4 +24,3 @@ jwt:
 
 server:
   port: 8080
-

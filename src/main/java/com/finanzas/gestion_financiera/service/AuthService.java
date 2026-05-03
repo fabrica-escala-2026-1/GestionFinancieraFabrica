@@ -13,25 +13,26 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository usuarioRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final CategoryInitService categoryInitService;
 
     public AuthResponse register(RegisterRequest request) {
-        // Verificar si el email ya existe
-        if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("El email ya está registrado");
+
+        // Si el email ya existe, el GlobalExceptionHandler convierte
+        // este RuntimeException en: { "mensaje": "El nombre de usuario ya se encuentra registrado" }
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("El nombre de usuario ya se encuentra registrado");
         }
 
-        // Crear el usuario con contraseña encriptada
         User user = new User();
         user.setPrimer_nombre(request.getPrimer_nombre());
         user.setApellido(request.getApellido());
         user.setEmail(request.getEmail());
         user.setContrasena(passwordEncoder.encode(request.getContrasena()));
 
-        usuarioRepository.save(user);
+        userRepository.save(user);
         categoryInitService.crearCategoriasPorDefecto(user);
 
         String token = jwtService.generateToken(user.getEmail());
@@ -39,11 +40,13 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        // Buscar usuario por email
-        User user = usuarioRepository.findByEmail(request.getEmail())
+
+        // Email no encontrado → misma respuesta genérica que contraseña incorrecta
+        // para no revelar si el email existe o no (buena práctica de seguridad)
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
-        // Verificar contraseña
+        // Contraseña incorrecta → mismo mensaje
         if (!passwordEncoder.matches(request.getContrasena(), user.getContrasena())) {
             throw new RuntimeException("Credenciales inválidas");
         }

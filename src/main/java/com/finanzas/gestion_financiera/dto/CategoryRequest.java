@@ -8,9 +8,9 @@ import lombok.Data;
 @Data
 public class CategoryRequest {
 
-    @NotBlank
+    @NotBlank(message = "El nombre de la categoría es obligatorio")
     private String nombre;
 
-    @NotNull
+    @NotNull(message = "El tipo es obligatorio, debe ser INGRESO o GASTO")
     private TipoCategoria tipo;
 }

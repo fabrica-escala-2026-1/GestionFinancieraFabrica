@@ -1,17 +1,20 @@
 package com.finanzas.gestion_financiera.dto;
 
-import com.finanzas.gestion_financiera.entity.Category.TipoCategoria;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.hateoas.RepresentationModel;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class CategoryResponse extends RepresentationModel<CategoryResponse>{
+public class BudgetResponse extends RepresentationModel<BudgetResponse> {
 
     private Long id;
-    private String nombre;
-    private TipoCategoria tipo;
+    private String categoryName;
+    private BigDecimal amount;
+    private LocalDate startDate;
+    private LocalDate endDate;
 }
