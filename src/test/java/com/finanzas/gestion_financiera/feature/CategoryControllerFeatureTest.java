@@ -47,12 +47,11 @@ class CategoryControllerFeatureTest {
 
     @Nested
     @DisplayName("POST /api/v1/categorias")
-    class CrearEndpoint {
+    class CreateEndpoint {
 
         @Test
-        @DisplayName("Debe crear categoría y retornar 200")
-        void debeCrearCategoriaExitosamente() throws Exception {
-            // Arrange
+        @DisplayName("Should create category and return 200")
+        void shouldCreateCategorySuccessfully() throws Exception {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Bonificación");
             request.setTipo(TipoCategoria.INGRESO);
@@ -60,7 +59,6 @@ class CategoryControllerFeatureTest {
             CategoryResponse response = new CategoryResponse(1L, "Bonificación", TipoCategoria.INGRESO);
             when(categoryService.crear(any(CategoryRequest.class))).thenReturn(response);
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/categorias")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -71,14 +69,12 @@ class CategoryControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si el nombre está vacío")
-        void debeRetornar400SiNombreVacio() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when name is empty")
+        void shouldReturn400WhenNameIsEmpty() throws Exception {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("");
             request.setTipo(TipoCategoria.GASTO);
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/categorias")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -86,14 +82,12 @@ class CategoryControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si falta el tipo")
-        void debeRetornar400SiFaltaTipo() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when type is missing")
+        void shouldReturn400WhenTypeIsMissing() throws Exception {
             String json = """
                     {"nombre": "Test"}
                     """;
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/categorias")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
@@ -103,19 +97,17 @@ class CategoryControllerFeatureTest {
 
     @Nested
     @DisplayName("GET /api/v1/categorias")
-    class ListarEndpoint {
+    class ListEndpoint {
 
         @Test
-        @DisplayName("Debe listar categorías del usuario autenticado")
-        void debeListarCategorias() throws Exception {
-            // Arrange
-            List<CategoryResponse> categorias = List.of(
+        @DisplayName("Should list categories of the authenticated user")
+        void shouldListCategories() throws Exception {
+            List<CategoryResponse> categories = List.of(
                     new CategoryResponse(1L, "Salario", TipoCategoria.INGRESO),
                     new CategoryResponse(2L, "Alimentación", TipoCategoria.GASTO)
             );
-            when(categoryService.listar()).thenReturn(categorias);
+            when(categoryService.listar()).thenReturn(categories);
 
-            // Act & Assert
             mockMvc.perform(get("/api/v1/categorias"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
@@ -126,16 +118,14 @@ class CategoryControllerFeatureTest {
 
     @Nested
     @DisplayName("GET /api/v1/categorias/{id}")
-    class ObtenerEndpoint {
+    class GetEndpoint {
 
         @Test
-        @DisplayName("Debe obtener categoría por ID")
-        void debeObtenerCategoriaPorId() throws Exception {
-            // Arrange
+        @DisplayName("Should fetch category by ID")
+        void shouldGetCategoryById() throws Exception {
             CategoryResponse response = new CategoryResponse(5L, "Transporte", TipoCategoria.GASTO);
             when(categoryService.obtener(5L)).thenReturn(response);
 
-            // Act & Assert
             mockMvc.perform(get("/api/v1/categorias/5"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(5))
@@ -145,12 +135,11 @@ class CategoryControllerFeatureTest {
 
     @Nested
     @DisplayName("PUT /api/v1/categorias/{id}")
-    class ActualizarEndpoint {
+    class UpdateEndpoint {
 
         @Test
-        @DisplayName("Debe actualizar categoría existente")
-        void debeActualizarCategoria() throws Exception {
-            // Arrange
+        @DisplayName("Should update an existing category")
+        void shouldUpdateCategory() throws Exception {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Nombre Actualizado");
             request.setTipo(TipoCategoria.INGRESO);
@@ -158,7 +147,6 @@ class CategoryControllerFeatureTest {
             CategoryResponse response = new CategoryResponse(3L, "Nombre Actualizado", TipoCategoria.INGRESO);
             when(categoryService.actualizar(eq(3L), any(CategoryRequest.class))).thenReturn(response);
 
-            // Act & Assert
             mockMvc.perform(put("/api/v1/categorias/3")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -167,14 +155,12 @@ class CategoryControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si datos de actualización son inválidos")
-        void debeRetornar400SiDatosInvalidos() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when update payload is invalid")
+        void shouldReturn400WhenPayloadIsInvalid() throws Exception {
             String json = """
                     {"nombre": "", "tipo": null}
                     """;
 
-            // Act & Assert
             mockMvc.perform(put("/api/v1/categorias/3")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
@@ -184,15 +170,13 @@ class CategoryControllerFeatureTest {
 
     @Nested
     @DisplayName("DELETE /api/v1/categorias/{id}")
-    class EliminarEndpoint {
+    class DeleteEndpoint {
 
         @Test
-        @DisplayName("Debe eliminar categoría y retornar 204")
-        void debeEliminarCategoria() throws Exception {
-            // Arrange
+        @DisplayName("Should delete category and return 204")
+        void shouldDeleteCategory() throws Exception {
             doNothing().when(categoryService).eliminar(4L);
 
-            // Act & Assert
             mockMvc.perform(delete("/api/v1/categorias/4"))
                     .andExpect(status().isNoContent());
             verify(categoryService).eliminar(4L);

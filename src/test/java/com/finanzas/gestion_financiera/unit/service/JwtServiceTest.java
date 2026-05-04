@@ -27,46 +27,37 @@ class JwtServiceTest {
     class GenerateToken {
 
         @Test
-        @DisplayName("Debe generar token JWT no nulo")
-        void debeGenerarTokenNoNulo() {
-            // Arrange
+        @DisplayName("Should generate a non-null JWT token")
+        void shouldGenerateNonNullToken() {
             String email = "test@email.com";
 
-            // Act
             String token = jwtService.generateToken(email);
 
-            // Assert
             assertNotNull(token);
             assertFalse(token.isEmpty());
         }
 
         @Test
-        @DisplayName("Debe generar tokens diferentes para distintos emails")
-        void debeGenerarTokensDiferentes() {
-            // Arrange
+        @DisplayName("Should generate different tokens for different emails")
+        void shouldGenerateDifferentTokens() {
             String email1 = "user1@email.com";
             String email2 = "user2@email.com";
 
-            // Act
             String token1 = jwtService.generateToken(email1);
             String token2 = jwtService.generateToken(email2);
 
-            // Assert
             assertNotEquals(token1, token2);
         }
 
         @Test
-        @DisplayName("Token debe tener formato JWT válido (3 partes separadas por punto)")
-        void tokenDebeSerFormatoJwt() {
-            // Arrange
+        @DisplayName("Token should have valid JWT format (3 dot-separated parts)")
+        void tokenShouldHaveJwtFormat() {
             String email = "test@email.com";
 
-            // Act
             String token = jwtService.generateToken(email);
 
-            // Assert
             String[] parts = token.split("\\.");
-            assertEquals(3, parts.length, "JWT debe tener 3 partes: header.payload.signature");
+            assertEquals(3, parts.length, "JWT must have 3 parts: header.payload.signature");
         }
     }
 
@@ -75,26 +66,21 @@ class JwtServiceTest {
     class ExtractEmail {
 
         @Test
-        @DisplayName("Debe extraer el email correcto del token")
-        void debeExtraerEmailCorrecto() {
-            // Arrange
+        @DisplayName("Should extract the correct email from the token")
+        void shouldExtractCorrectEmail() {
             String email = "juan@email.com";
             String token = jwtService.generateToken(email);
 
-            // Act
             String extractedEmail = jwtService.extractEmail(token);
 
-            // Assert
             assertEquals(email, extractedEmail);
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción con token inválido")
-        void debeLanzarExcepcionConTokenInvalido() {
-            // Arrange
+        @DisplayName("Should throw exception when token is invalid")
+        void shouldThrowExceptionWithInvalidToken() {
             String invalidToken = "token.invalido.aqui";
 
-            // Act & Assert
             assertThrows(Exception.class,
                     () -> jwtService.extractEmail(invalidToken));
         }
@@ -105,35 +91,28 @@ class JwtServiceTest {
     class IsTokenValid {
 
         @Test
-        @DisplayName("Debe retornar true para token válido")
-        void debeRetornarTrueParaTokenValido() {
-            // Arrange
+        @DisplayName("Should return true for a valid token")
+        void shouldReturnTrueForValidToken() {
             String token = jwtService.generateToken("test@email.com");
 
-            // Act
             boolean result = jwtService.isTokenValid(token);
 
-            // Assert
             assertTrue(result);
         }
 
         @Test
-        @DisplayName("Debe retornar false para token inválido")
-        void debeRetornarFalseParaTokenInvalido() {
-            // Arrange
+        @DisplayName("Should return false for an invalid token")
+        void shouldReturnFalseForInvalidToken() {
             String invalidToken = "eyJhbGciOiJIUzI1NiJ9.invalid.signature";
 
-            // Act
             boolean result = jwtService.isTokenValid(invalidToken);
 
-            // Assert
             assertFalse(result);
         }
 
         @Test
-        @DisplayName("Debe retornar false para token expirado")
-        void debeRetornarFalseParaTokenExpirado() {
-            // Arrange
+        @DisplayName("Should return false for an expired token")
+        void shouldReturnFalseForExpiredToken() {
             JwtService expiredJwtService = new JwtService();
             ReflectionTestUtils.setField(expiredJwtService, "secret",
                     "clave-super-secreta-larga-para-jwt-minimo-32-caracteres-test");
@@ -141,17 +120,14 @@ class JwtServiceTest {
 
             String token = expiredJwtService.generateToken("test@email.com");
 
-            // Act
             boolean result = expiredJwtService.isTokenValid(token);
 
-            // Assert
             assertFalse(result);
         }
 
         @Test
-        @DisplayName("Debe retornar false para token con firma diferente")
-        void debeRetornarFalseParaTokenConFirmaDiferente() {
-            // Arrange
+        @DisplayName("Should return false for a token with a different signature")
+        void shouldReturnFalseForTokenWithDifferentSignature() {
             JwtService otherService = new JwtService();
             ReflectionTestUtils.setField(otherService, "secret",
                     "otra-clave-secreta-diferente-para-jwt-minimo-32-caracteres");
@@ -159,10 +135,8 @@ class JwtServiceTest {
 
             String token = otherService.generateToken("test@email.com");
 
-            // Act
             boolean result = jwtService.isTokenValid(token);
 
-            // Assert
             assertFalse(result);
         }
     }

@@ -44,12 +44,11 @@ class TransactionControllerFeatureTest {
 
     @Nested
     @DisplayName("POST /api/v1/transacciones")
-    class CrearEndpoint {
+    class CreateEndpoint {
 
         @Test
-        @DisplayName("Debe crear transacción de ingreso y retornar 200")
-        void debeCrearTransaccionIngreso() throws Exception {
-            // Arrange
+        @DisplayName("Should create an INGRESO transaction and return 200")
+        void shouldCreateIncomeTransaction() throws Exception {
             TransactionResponse response = new TransactionResponse(
                     1L, "INGRESO", new BigDecimal("5000.00"),
                     LocalDate.of(2026, 4, 1), "Salario");
@@ -64,7 +63,6 @@ class TransactionControllerFeatureTest {
                     }
                     """;
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/transacciones")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
@@ -76,9 +74,8 @@ class TransactionControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe crear transacción de gasto y retornar 200")
-        void debeCrearTransaccionGasto() throws Exception {
-            // Arrange
+        @DisplayName("Should create a GASTO transaction and return 200")
+        void shouldCreateExpenseTransaction() throws Exception {
             TransactionResponse response = new TransactionResponse(
                     2L, "GASTO", new BigDecimal("250.75"),
                     LocalDate.of(2026, 4, 5), "Alimentación");
@@ -93,7 +90,6 @@ class TransactionControllerFeatureTest {
                     }
                     """;
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/transacciones")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
@@ -103,9 +99,8 @@ class TransactionControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si el tipo es inválido")
-        void debeRetornar400SiTipoInvalido() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when type is invalid")
+        void shouldReturn400WhenTypeIsInvalid() throws Exception {
             String json = """
                     {
                         "tipo": "INVALIDO",
@@ -115,7 +110,6 @@ class TransactionControllerFeatureTest {
                     }
                     """;
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/transacciones")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
@@ -123,9 +117,8 @@ class TransactionControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si el monto es 0 o negativo")
-        void debeRetornar400SiMontoInvalido() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when amount is 0 or negative")
+        void shouldReturn400WhenAmountIsInvalid() throws Exception {
             String json = """
                     {
                         "tipo": "GASTO",
@@ -135,7 +128,6 @@ class TransactionControllerFeatureTest {
                     }
                     """;
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/transacciones")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
@@ -143,9 +135,8 @@ class TransactionControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si falta la categoría")
-        void debeRetornar400SiFaltaCategoria() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when category is missing")
+        void shouldReturn400WhenCategoryIsMissing() throws Exception {
             String json = """
                     {
                         "tipo": "INGRESO",
@@ -154,7 +145,6 @@ class TransactionControllerFeatureTest {
                     }
                     """;
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/transacciones")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
@@ -164,21 +154,19 @@ class TransactionControllerFeatureTest {
 
     @Nested
     @DisplayName("GET /api/v1/transacciones")
-    class ListarEndpoint {
+    class ListEndpoint {
 
         @Test
-        @DisplayName("Debe listar transacciones del usuario autenticado")
-        void debeListarTransacciones() throws Exception {
-            // Arrange
-            List<TransactionResponse> transacciones = List.of(
+        @DisplayName("Should list transactions of the authenticated user")
+        void shouldListTransactions() throws Exception {
+            List<TransactionResponse> transactions = List.of(
                     new TransactionResponse(1L, "INGRESO", new BigDecimal("5000"),
                             LocalDate.of(2026, 4, 1), "Salario"),
                     new TransactionResponse(2L, "GASTO", new BigDecimal("200"),
                             LocalDate.of(2026, 4, 2), "Alimentación")
             );
-            when(transactionService.listar()).thenReturn(transacciones);
+            when(transactionService.listar()).thenReturn(transactions);
 
-            // Act & Assert
             mockMvc.perform(get("/api/v1/transacciones"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
@@ -187,12 +175,10 @@ class TransactionControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar lista vacía si no hay transacciones")
-        void debeRetornarListaVacia() throws Exception {
-            // Arrange
+        @DisplayName("Should return an empty list when there are no transactions")
+        void shouldReturnEmptyList() throws Exception {
             when(transactionService.listar()).thenReturn(List.of());
 
-            // Act & Assert
             mockMvc.perform(get("/api/v1/transacciones"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(0));

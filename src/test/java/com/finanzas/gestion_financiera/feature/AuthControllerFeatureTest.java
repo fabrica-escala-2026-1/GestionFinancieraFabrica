@@ -47,9 +47,8 @@ class AuthControllerFeatureTest {
     class RegisterEndpoint {
 
         @Test
-        @DisplayName("Debe registrar usuario y retornar 200 con token")
-        void debeRegistrarUsuarioExitosamente() throws Exception {
-            // Arrange
+        @DisplayName("Should register user and return 200 with token")
+        void shouldRegisterUserSuccessfully() throws Exception {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("Juan");
             request.setApellido("Pérez");
@@ -59,7 +58,6 @@ class AuthControllerFeatureTest {
             AuthResponse authResponse = new AuthResponse("jwt-token", "juan@email.com", "Juan");
             when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -70,16 +68,14 @@ class AuthControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si el nombre está vacío")
-        void debeRetornar400SiNombreVacio() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when first name is empty")
+        void shouldReturn400WhenFirstNameIsEmpty() throws Exception {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("");
             request.setApellido("Pérez");
             request.setEmail("juan@email.com");
             request.setContrasena("Password1!");
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -87,16 +83,14 @@ class AuthControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si el email es inválido")
-        void debeRetornar400SiEmailInvalido() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when email is invalid")
+        void shouldReturn400WhenEmailIsInvalid() throws Exception {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("Juan");
             request.setApellido("Pérez");
             request.setEmail("no-es-email");
             request.setContrasena("Password1!");
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -104,16 +98,14 @@ class AuthControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si la contraseña no cumple requisitos")
-        void debeRetornar400SiContrasenaDebil() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when password does not meet requirements")
+        void shouldReturn400WhenPasswordIsWeak() throws Exception {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("Juan");
             request.setApellido("Pérez");
             request.setEmail("juan@email.com");
             request.setContrasena("simple");
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -121,16 +113,14 @@ class AuthControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si falta el apellido")
-        void debeRetornar400SiFaltaApellido() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when last name is missing")
+        void shouldReturn400WhenLastNameIsMissing() throws Exception {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("Juan");
             request.setApellido("");
             request.setEmail("juan@email.com");
             request.setContrasena("Password1!");
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -138,11 +128,8 @@ class AuthControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si el body está vacío")
-        void debeRetornar400SiBodyVacio() throws Exception {
-            // Arrange - body vacío
-
-            // Act & Assert
+        @DisplayName("Should return 400 when body is empty")
+        void shouldReturn400WhenBodyIsEmpty() throws Exception {
             mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
@@ -155,9 +142,8 @@ class AuthControllerFeatureTest {
     class LoginEndpoint {
 
         @Test
-        @DisplayName("Debe autenticar y retornar 200 con token")
-        void debeAutenticarExitosamente() throws Exception {
-            // Arrange
+        @DisplayName("Should authenticate and return 200 with token")
+        void shouldAuthenticateSuccessfully() throws Exception {
             LoginRequest request = new LoginRequest();
             request.setEmail("juan@email.com");
             request.setContrasena("Password1!");
@@ -165,7 +151,6 @@ class AuthControllerFeatureTest {
             AuthResponse authResponse = new AuthResponse("jwt-token", "juan@email.com", "Juan");
             when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -175,14 +160,12 @@ class AuthControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si el email está vacío")
-        void debeRetornar400SiEmailVacio() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when email is empty")
+        void shouldReturn400WhenEmailIsEmpty() throws Exception {
             LoginRequest request = new LoginRequest();
             request.setEmail("");
             request.setContrasena("Password1!");
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -190,14 +173,12 @@ class AuthControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si falta la contraseña")
-        void debeRetornar400SiFaltaContrasena() throws Exception {
-            // Arrange
+        @DisplayName("Should return 400 when password is missing")
+        void shouldReturn400WhenPasswordIsMissing() throws Exception {
             LoginRequest request = new LoginRequest();
             request.setEmail("juan@email.com");
             request.setContrasena("");
 
-            // Act & Assert
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))

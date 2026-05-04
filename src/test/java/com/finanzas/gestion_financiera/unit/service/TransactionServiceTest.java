@@ -81,11 +81,11 @@ class TransactionServiceTest {
 
     @Nested
     @DisplayName("crear()")
-    class Crear {
+    class Create {
 
         @Test
-        @DisplayName("Debe crear transacción de ingreso correctamente")
-        void debeCrearTransaccionIngreso() {
+        @DisplayName("Should create an INGRESO transaction correctly")
+        void shouldCreateIncomeTransaction() {
             TransactionRequest request = new TransactionRequest();
             request.setTipo("INGRESO");
             request.setMonto(new BigDecimal("5000.00"));
@@ -110,19 +110,19 @@ class TransactionServiceTest {
         }
 
         @Test
-        @DisplayName("Debe crear transacción de gasto correctamente")
-        void debeCrearTransaccionGasto() {
-            Category gastoCategory = new Category();
-            gastoCategory.setId(20L);
-            gastoCategory.setNombre("Alimentación");
-            gastoCategory.setTipo(Category.TipoCategoria.GASTO);
+        @DisplayName("Should create a GASTO transaction correctly")
+        void shouldCreateExpenseTransaction() {
+            Category expenseCategory = new Category();
+            expenseCategory.setId(20L);
+            expenseCategory.setNombre("Alimentación");
+            expenseCategory.setTipo(Category.TipoCategoria.GASTO);
 
             TransactionRequest request = new TransactionRequest();
             request.setTipo("GASTO");
             request.setMonto(new BigDecimal("150.50"));
             request.setCategoriaId(20L);
 
-            when(categoryRepository.findById(20L)).thenReturn(Optional.of(gastoCategory));
+            when(categoryRepository.findById(20L)).thenReturn(Optional.of(expenseCategory));
             when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> {
                 Transaction t = i.getArgument(0);
                 t.setId(2L);
@@ -138,8 +138,8 @@ class TransactionServiceTest {
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción si la categoría no existe")
-        void debeLanzarExcepcionSiCategoriaNoExiste() {
+        @DisplayName("Should throw exception when the category does not exist")
+        void shouldThrowExceptionWhenCategoryDoesNotExist() {
             TransactionRequest request = new TransactionRequest();
             request.setTipo("INGRESO");
             request.setMonto(new BigDecimal("100"));
@@ -154,8 +154,8 @@ class TransactionServiceTest {
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción si el usuario no existe")
-        void debeLanzarExcepcionSiUsuarioNoExiste() {
+        @DisplayName("Should throw exception when the user does not exist")
+        void shouldThrowExceptionWhenUserDoesNotExist() {
             TransactionRequest request = new TransactionRequest();
             request.setTipo("INGRESO");
             request.setMonto(new BigDecimal("100"));
@@ -170,11 +170,11 @@ class TransactionServiceTest {
 
     @Nested
     @DisplayName("listar()")
-    class Listar {
+    class List_ {
 
         @Test
-        @DisplayName("Debe listar transacciones del usuario autenticado")
-        void debeListarTransaccionesDelUsuario() {
+        @DisplayName("Should list transactions of the authenticated user")
+        void shouldListUserTransactions() {
             Transaction t1 = new Transaction();
             t1.setId(1L);
             t1.setTipo("INGRESO");
@@ -203,8 +203,8 @@ class TransactionServiceTest {
         }
 
         @Test
-        @DisplayName("Debe retornar lista vacía si no tiene transacciones")
-        void debeRetornarListaVacia() {
+        @DisplayName("Should return an empty list when there are no transactions")
+        void shouldReturnEmptyList() {
             when(transactionRepository.findByUsuarioId(1L)).thenReturn(List.of());
 
             List<TransactionResponse> result = transactionService.listar();

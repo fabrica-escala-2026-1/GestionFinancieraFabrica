@@ -48,9 +48,8 @@ class AuthServiceTest {
     class Register {
 
         @Test
-        @DisplayName("Debe registrar usuario exitosamente con datos válidos")
-        void debeRegistrarUsuarioExitosamente() {
-            // Arrange
+        @DisplayName("Should register a user successfully with valid data")
+        void shouldRegisterUserSuccessfully() {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("Juan");
             request.setApellido("Pérez");
@@ -66,10 +65,8 @@ class AuthServiceTest {
             });
             when(jwtService.generateToken("juan@email.com")).thenReturn("jwt-token");
 
-            // Act
             AuthResponse response = authService.register(request);
 
-            // Assert
             assertNotNull(response);
             assertEquals("jwt-token", response.getToken());
             assertEquals("juan@email.com", response.getEmail());
@@ -79,9 +76,8 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción si el email ya está registrado")
-        void debeLanzarExcepcionSiEmailDuplicado() {
-            // Arrange
+        @DisplayName("Should throw exception when email is already registered")
+        void shouldThrowExceptionWhenEmailDuplicated() {
             RegisterRequest request = new RegisterRequest();
             request.setEmail("existente@email.com");
 
@@ -89,7 +85,6 @@ class AuthServiceTest {
             existingUser.setEmail("existente@email.com");
             when(usuarioRepository.findByEmail("existente@email.com")).thenReturn(Optional.of(existingUser));
 
-            // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
                     () -> authService.register(request));
             assertEquals("El email ya se encuentra registrado", exception.getMessage());
@@ -97,9 +92,8 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("Debe encriptar la contraseña antes de guardar")
-        void debeEncriptarContrasena() {
-            // Arrange
+        @DisplayName("Should encrypt the password before saving")
+        void shouldEncryptPassword() {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("Ana");
             request.setApellido("López");
@@ -111,10 +105,8 @@ class AuthServiceTest {
             when(usuarioRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
             when(jwtService.generateToken(anyString())).thenReturn("token");
 
-            // Act
             authService.register(request);
 
-            // Assert
             verify(passwordEncoder).encode("MiPass1!");
             verify(usuarioRepository).save(argThat(user ->
                     "$2a$encoded".equals(user.getContrasena())
@@ -122,9 +114,8 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("Debe crear categorías por defecto al registrar usuario")
-        void debeCrearCategoriasPorDefecto() {
-            // Arrange
+        @DisplayName("Should create default categories when registering a user")
+        void shouldCreateDefaultCategories() {
             RegisterRequest request = new RegisterRequest();
             request.setPrimer_nombre("Carlos");
             request.setApellido("García");
@@ -136,10 +127,8 @@ class AuthServiceTest {
             when(usuarioRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
             when(jwtService.generateToken(anyString())).thenReturn("token");
 
-            // Act
             authService.register(request);
 
-            // Assert
             verify(categoryInitService).crearCategoriasPorDefecto(any(User.class));
         }
     }
@@ -149,9 +138,8 @@ class AuthServiceTest {
     class Login {
 
         @Test
-        @DisplayName("Debe autenticar usuario con credenciales correctas")
-        void debeAutenticarConCredencialesCorrectas() {
-            // Arrange
+        @DisplayName("Should authenticate user with correct credentials")
+        void shouldAuthenticateWithCorrectCredentials() {
             LoginRequest request = new LoginRequest();
             request.setEmail("juan@email.com");
             request.setContrasena("Password1!");
@@ -166,10 +154,8 @@ class AuthServiceTest {
             when(passwordEncoder.matches("Password1!", "$2a$encoded")).thenReturn(true);
             when(jwtService.generateToken("juan@email.com")).thenReturn("jwt-token");
 
-            // Act
             AuthResponse response = authService.login(request);
 
-            // Assert
             assertNotNull(response);
             assertEquals("jwt-token", response.getToken());
             assertEquals("juan@email.com", response.getEmail());
@@ -177,25 +163,22 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción si el email no existe")
-        void debeLanzarExcepcionSiEmailNoExiste() {
-            // Arrange
+        @DisplayName("Should throw exception when email does not exist")
+        void shouldThrowExceptionWhenEmailDoesNotExist() {
             LoginRequest request = new LoginRequest();
             request.setEmail("noexiste@email.com");
             request.setContrasena("Password1!");
 
             when(usuarioRepository.findByEmail("noexiste@email.com")).thenReturn(Optional.empty());
 
-            // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
                     () -> authService.login(request));
             assertEquals("Credenciales inválidas", exception.getMessage());
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción si la contraseña es incorrecta")
-        void debeLanzarExcepcionSiContrasenaIncorrecta() {
-            // Arrange
+        @DisplayName("Should throw exception when password is incorrect")
+        void shouldThrowExceptionWhenPasswordIsIncorrect() {
             LoginRequest request = new LoginRequest();
             request.setEmail("juan@email.com");
             request.setContrasena("WrongPass1!");
@@ -207,7 +190,6 @@ class AuthServiceTest {
             when(usuarioRepository.findByEmail("juan@email.com")).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("WrongPass1!", "$2a$encoded")).thenReturn(false);
 
-            // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
                     () -> authService.login(request));
             assertEquals("Credenciales inválidas", exception.getMessage());
