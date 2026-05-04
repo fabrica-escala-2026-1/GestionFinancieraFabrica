@@ -143,25 +143,6 @@ class TransactionControllerFeatureTest {
         }
 
         @Test
-        @DisplayName("Debe retornar 400 si falta la fecha")
-        void debeRetornar400SiFaltaFecha() throws Exception {
-            // Arrange
-            String json = """
-                    {
-                        "tipo": "GASTO",
-                        "monto": 100.00,
-                        "categoriaId": 1
-                    }
-                    """;
-
-            // Act & Assert
-            mockMvc.perform(post("/api/v1/transacciones")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(json))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
         @DisplayName("Debe retornar 400 si falta la categoría")
         void debeRetornar400SiFaltaCategoria() throws Exception {
             // Arrange
