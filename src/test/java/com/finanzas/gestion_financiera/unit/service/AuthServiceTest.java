@@ -92,7 +92,7 @@ class AuthServiceTest {
             // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
                     () -> authService.register(request));
-            assertEquals("El email ya está registrado", exception.getMessage());
+            assertEquals("El email ya se encuentra registrado", exception.getMessage());
             verify(usuarioRepository, never()).save(any());
         }
 
