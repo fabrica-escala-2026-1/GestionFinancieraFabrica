@@ -4,19 +4,48 @@ import com.finanzas.gestion_financiera.entity.Budget;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import java.time.LocalDate;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
+
     List<Budget> findByCategoryUsuarioId(Long usuarioId);
+
     Optional<Budget> findByIdAndCategoryUsuarioId(Long id, Long usuarioId);
-    boolean existsByCategoryIdAndEndDateGreaterThanEqual(Long categoryId, LocalDate today);
 
-    @Query("SELECT b FROM Budget b WHERE b.category.id = :categoryId " +
-            "AND b.startDate <= :today AND b.endDate >= :today")
-    Optional<Budget> findActiveByCategoryIdAndUserId(
+    // Verifica si ya existe un presupuesto activo para esa categoría
+    // que se solape con el período solicitado
+    @Query("""
+        SELECT COUNT(b) > 0 FROM Budget b
+        WHERE b.category.id = :categoryId
+        AND (
+            (b.startYear * 12 + b.startMonth)
+            <=
+            (:endYear * 12 + :endMonth)
+        )
+        AND (
+            (b.startYear * 12 + b.startMonth + b.durationMonths)
+            >=
+            (:startYear * 12 + :startMonth)
+        )
+    """)
+    boolean existsActiveBudgetForCategory(
             @Param("categoryId") Long categoryId,
-            @Param("today") LocalDate today);
+            @Param("startMonth") int startMonth,
+            @Param("startYear") int startYear,
+            @Param("endMonth") int endMonth,
+            @Param("endYear") int endYear);
 
+    // Busca el presupuesto activo para una categoría en un mes/año específico
+    @Query("""
+        SELECT b FROM Budget b
+        WHERE b.category.id = :categoryId
+        AND (b.startYear * 12 + b.startMonth) <= (:year * 12 + :month)
+        AND (b.startYear * 12 + b.startMonth + b.durationMonths) >= (:year * 12 + :month)
+    """)
+    Optional<Budget> findActiveBudgetForCategoryAndMonth(
+            @Param("categoryId") Long categoryId,
+            @Param("month") int month,
+            @Param("year") int year);
 }

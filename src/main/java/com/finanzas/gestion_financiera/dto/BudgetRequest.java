@@ -3,7 +3,6 @@ package com.finanzas.gestion_financiera.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 public class BudgetRequest {
@@ -15,9 +14,11 @@ public class BudgetRequest {
     @DecimalMin(value = "0.01", message = "El monto debe ser mayor a 0")
     private BigDecimal amount;
 
-    @NotNull(message = "La fecha final es obligatoria")
-    @Future(message = "La fecha final debe ser una fecha futura")
-    private LocalDate endDate;
+    // 0 = solo el mes actual, máximo 12 meses adicionales
+    @NotNull(message = "La duración es obligatoria")
+    @Min(value = 0, message = "La duración mínima es 0 meses")
+    @Max(value = 12, message = "La duración máxima es 12 meses")
+    private Integer durationMonths;
 
-    // startDate no se recibe — se asigna automáticamente en la entidad
+    // startMonth y startYear no se reciben — se asignan automáticamente
 }

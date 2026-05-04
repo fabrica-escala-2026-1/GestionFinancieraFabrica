@@ -1,4 +1,6 @@
 package com.finanzas.gestion_financiera.service;
+
+import com.finanzas.gestion_financiera.dto.BudgetComparisonResponse;
 import com.finanzas.gestion_financiera.dto.BudgetRequest;
 import com.finanzas.gestion_financiera.dto.BudgetResponse;
 import com.finanzas.gestion_financiera.entity.Budget;
@@ -6,18 +8,19 @@ import com.finanzas.gestion_financiera.entity.Category;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.BudgetRepository;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
-import com.finanzas.gestion_financiera.repository.UserRepository;
-import com.finanzas.gestion_financiera.dto.BudgetComparisonResponse;
 import com.finanzas.gestion_financiera.repository.TransactionRepository;
+import com.finanzas.gestion_financiera.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,23 +34,32 @@ public class BudgetService {
     public BudgetResponse create(BudgetRequest request) {
         User user = getAuthenticatedUser();
 
-        // Validar que la categoría pertenece al usuario autenticado
         Category category = categoryRepository
                 .findByIdAndUsuarioId(request.getCategoryId(), user.getId())
                 .orElseThrow(() -> new RuntimeException("Categoría no válida"));
 
-        // Validar que no exista un presupuesto activo para esa categoría
-        if (budgetRepository.existsByCategoryIdAndEndDateGreaterThanEqual(
-                request.getCategoryId(), LocalDate.now())) {
+        // Mes y año actuales — se asignan automáticamente
+        YearMonth now = YearMonth.now();
+        int currentMonth = now.getMonthValue();
+        int currentYear = now.getYear();
+
+        // Calcular mes/año de fin
+        YearMonth endYearMonth = now.plusMonths(request.getDurationMonths());
+
+        // Validar que no exista presupuesto activo para esa categoría en el período
+        if (budgetRepository.existsActiveBudgetForCategory(
+                request.getCategoryId(), currentMonth, currentYear,
+                endYearMonth.getMonthValue(), endYearMonth.getYear())) {
             throw new RuntimeException(
-                    "Ya existe un presupuesto activo para esta categoría");
+                    "Ya existe un presupuesto activo para esta categoría en ese período");
         }
 
         Budget budget = new Budget();
         budget.setCategory(category);
         budget.setAmount(request.getAmount());
-        budget.setEndDate(request.getEndDate());
-        // startDate lo asigna @CreationTimestamp automáticamente
+        budget.setStartMonth(currentMonth);
+        budget.setStartYear(currentYear);
+        budget.setDurationMonths(request.getDurationMonths());
 
         budgetRepository.save(budget);
         return toResponse(budget);
@@ -72,17 +84,9 @@ public class BudgetService {
                 .findByIdAndUsuarioId(request.getCategoryId(), user.getId())
                 .orElseThrow(() -> new RuntimeException("Categoría no válida"));
 
-        // Validar presupuesto activo solo si cambia de categoría
-        if (!budget.getCategory().getId().equals(request.getCategoryId()) &&
-                budgetRepository.existsByCategoryIdAndEndDateGreaterThanEqual(
-                        request.getCategoryId(), LocalDate.now())) {
-            throw new RuntimeException(
-                    "Ya existe un presupuesto activo para esta categoría");
-        }
-
         budget.setCategory(category);
         budget.setAmount(request.getAmount());
-        budget.setEndDate(request.getEndDate());
+        budget.setDurationMonths(request.getDurationMonths());
 
         budgetRepository.save(budget);
         return toResponse(budget);
@@ -96,52 +100,36 @@ public class BudgetService {
         budgetRepository.delete(budget);
     }
 
-    private User getAuthenticatedUser() {
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-    }
-
-    private BudgetResponse toResponse(Budget budget) {
-        return new BudgetResponse(
-                budget.getId(),
-                budget.getCategory().getNombre(),
-                budget.getAmount(),
-                budget.getStartDate(),
-                budget.getEndDate()
-        );
-    }
-
     public List<BudgetComparisonResponse> comparativa() {
         User user = getAuthenticatedUser();
+        YearMonth now = YearMonth.now();
 
-        // Obtener todas las categorías del usuario
         List<Category> categorias = categoryRepository.findByUsuarioId(user.getId());
 
         return categorias.stream()
                 .filter(c -> c.getTipo().name().equals("GASTO"))
                 .map(category -> {
 
-                    // Buscar si tiene presupuesto activo
+                    // Buscar presupuesto activo para el mes actual
                     Optional<Budget> budgetOpt = budgetRepository
-                            .findActiveByCategoryIdAndUserId(category.getId(), LocalDate.now());
+                            .findActiveBudgetForCategoryAndMonth(
+                                    category.getId(),
+                                    now.getMonthValue(),
+                                    now.getYear());
 
-                    // Sumar gastos del período
-                    LocalDate startDate = budgetOpt
-                            .map(Budget::getStartDate)
-                            .orElse(LocalDate.now().withDayOfMonth(1));
-                    LocalDate endDate = budgetOpt
-                            .map(Budget::getEndDate)
-                            .orElse(LocalDate.now());
+                    // Sumar gastos del mes actual
+                    LocalDate startDate = now.atDay(1);
+                    LocalDate endDate = now.atEndOfMonth();
 
-                    BigDecimal gastado = transactionRepository.sumGastosByCategoryAndPeriod(
-                            category.getId(), user.getId(), startDate, endDate);
+                    BigDecimal gastado = transactionRepository
+                            .sumGastosByCategoryAndPeriod(
+                                    category.getId(), user.getId(),
+                                    startDate, endDate);
 
-                    // Sin presupuesto — Escenario 4
                     if (budgetOpt.isEmpty()) {
                         return new BudgetComparisonResponse(
-                                category.getNombre(), null, gastado, null, null, null);
+                                category.getNombre(), null, gastado,
+                                null, null, null);
                     }
 
                     Budget budget = budgetOpt.get();
@@ -153,26 +141,46 @@ public class BudgetService {
                             .divide(limite, 2, RoundingMode.HALF_UP)
                             .doubleValue();
 
-                    // Determinar alerta
-                    String alerta = null;
+                    String alerta;
                     if (porcentaje > 100) {
-                        // Escenario 3 — Excedido
                         BigDecimal excedido = gastado.subtract(limite);
-                        alerta = "Has excedido el presupuesto de " + category.getNombre()
-                                + " en " + excedido + " COP";
+                        alerta = "Has excedido el presupuesto de "
+                                + category.getNombre() + " en " + excedido + " COP";
                     } else if (porcentaje >= 80) {
-                        // Escenario 2 — Cerca del límite
                         alerta = "Has superado el 80% del presupuesto de "
                                 + category.getNombre();
                     } else {
-                        // Escenario 1 — Normal
-                        alerta = "Llevas el " + porcentaje + "% del presupuesto de "
+                        alerta = "Llevas el " + porcentaje
+                                + "% del presupuesto de "
                                 + category.getNombre() + " utilizado";
                     }
 
                     return new BudgetComparisonResponse(
-                            category.getNombre(), limite, gastado, disponible, porcentaje, alerta);
+                            category.getNombre(), limite, gastado,
+                            disponible, porcentaje, alerta);
                 })
                 .collect(Collectors.toList());
+    }
+
+    private User getAuthenticatedUser() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    }
+
+    private BudgetResponse toResponse(Budget budget) {
+        YearMonth end = YearMonth.of(budget.getStartYear(), budget.getStartMonth())
+                .plusMonths(budget.getDurationMonths());
+        return new BudgetResponse(
+                budget.getId(),
+                budget.getCategory().getNombre(),
+                budget.getAmount(),
+                budget.getStartMonth(),
+                budget.getStartYear(),
+                budget.getDurationMonths(),
+                end.getMonthValue(),
+                end.getYear()
+        );
     }
 }
