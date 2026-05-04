@@ -2,10 +2,8 @@ package com.finanzas.gestion_financiera.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 @Entity
@@ -20,13 +18,17 @@ public class Budget {
     @JoinColumn(name = "categoria_id", nullable = false)
     private Category category;
 
-    @Column(name = "presupuesto", nullable = false)
+    @Column(name = "monto", nullable = false)
     private BigDecimal amount;
 
-    @CreationTimestamp
-    @Column(name = "fecha_inicio", nullable = false, updatable = false)
-    private LocalDate startDate;
+    // Mes y año en que inicia el presupuesto (se asigna automáticamente al crear)
+    @Column(name = "mes_inicio", nullable = false)
+    private Integer startMonth;
 
-    @Column(name = "fecha_fin", nullable = false)
-    private LocalDate endDate;
+    @Column(name = "anio_inicio", nullable = false)
+    private Integer startYear;
+
+    // Cuántos meses adicionales aplica (0 = solo el mes actual, máximo 12)
+    @Column(name = "duracion_meses", nullable = false)
+    private Integer durationMonths;
 }

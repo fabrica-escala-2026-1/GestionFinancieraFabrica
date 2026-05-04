@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.hateoas.RepresentationModel;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -15,6 +14,9 @@ public class BudgetResponse extends RepresentationModel<BudgetResponse> {
     private Long id;
     private String categoryName;
     private BigDecimal amount;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private Integer startMonth;  // mes de inicio (1-12)
+    private Integer startYear;   // año de inicio
+    private Integer durationMonths; // duración en meses adicionales
+    private Integer endMonth;    // mes de fin calculado
+    private Integer endYear;     // año de fin calculado
 }
