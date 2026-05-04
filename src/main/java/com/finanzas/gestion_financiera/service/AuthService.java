@@ -23,7 +23,7 @@ public class AuthService {
         // Si el email ya existe, el GlobalExceptionHandler convierte
         // este RuntimeException en: { "mensaje": "El nombre de usuario ya se encuentra registrado" }
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("El nombre de usuario ya se encuentra registrado");
+            throw new RuntimeException("El email ya se encuentra registrado");
         }
 
         User user = new User();
