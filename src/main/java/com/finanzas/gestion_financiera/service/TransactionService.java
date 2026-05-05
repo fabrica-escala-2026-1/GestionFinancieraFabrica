@@ -51,7 +51,7 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setTipo(request.getTipo());
         transaction.setMonto(request.getMonto());
-        transaction.setFecha(LocalDate.now()); // se asigna automáticamente
+        transaction.setFecha(request.getFecha());
         transaction.setUsuario(user);
         transaction.setCategoria(category);
 
