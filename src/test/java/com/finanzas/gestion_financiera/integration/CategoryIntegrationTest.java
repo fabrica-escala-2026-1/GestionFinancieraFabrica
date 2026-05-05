@@ -1,4 +1,4 @@
-package com.finanzas.gestion_financiera.feature;
+package com.finanzas.gestion_financiera.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finanzas.gestion_financiera.controller.CategoryController;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Category Feature - API /api/v1/categorias")
-class CategoryControllerFeatureTest {
+class CategoryIntegrationTest {
 
     private MockMvc mockMvc;
 

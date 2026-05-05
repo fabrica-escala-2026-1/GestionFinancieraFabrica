@@ -22,5 +22,8 @@ public class TransactionRequest {
     @NotNull(message = "La categoría es obligatoria")
     private Long categoriaId;
 
-    // fecha eliminada — se asigna automáticamente en el service
+    // la fecha la asigna el usuario, porque hace referencia a la fecha de
+    // la transacción que realizó, no a la fecha de registro en el sistema
+    @NotNull(message = "La fecha de la transacción es obligatoria")
+    private LocalDate fecha;
 }
