@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -28,6 +29,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private static final String USUARIO_NO_ENCONTRADO = "Usuario no encontrado";
 
     public TransactionResponse crear(TransactionRequest request) {
 
@@ -35,18 +37,18 @@ public class TransactionService {
                 .getAuthentication().getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(USUARIO_NO_ENCONTRADO));
 
         if (!request.getTipo().equals("INGRESO") && !request.getTipo().equals("GASTO")) {
-            throw new RuntimeException("El tipo debe ser INGRESO o GASTO");
+            throw new IllegalArgumentException("El tipo debe ser INGRESO o GASTO");
         }
 
         if (request.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Debes ingresar un monto válido");
+            throw new IllegalArgumentException("Debes ingresar un monto válido");
         }
 
         Category category = categoryRepository.findById(request.getCategoriaId())
-                .orElseThrow(() -> new RuntimeException("Categoría no válida"));
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no válida"));
 
         Transaction transaction = new Transaction();
         transaction.setTipo(request.getTipo());
@@ -72,7 +74,7 @@ public class TransactionService {
                 .getAuthentication().getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(USUARIO_NO_ENCONTRADO));
 
         return transactionRepository.findByUsuarioId(user.getId())
                 .stream()
@@ -83,13 +85,13 @@ public class TransactionService {
                         t.getFecha(),
                         t.getCategoria().getNombre()
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public ResumenGastosMensualesResponse obtenerResumenGastosPorCategoria(Integer anio, Integer mes) {
 
         if (mes < 1 || mes > 12) {
-            throw new RuntimeException("El mes debe estar entre 1 y 12");
+            throw new IllegalArgumentException("El mes debe estar entre 1 y 12");
         }
 
         String email = SecurityContextHolder.getContext()
@@ -97,7 +99,7 @@ public class TransactionService {
                 .getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(USUARIO_NO_ENCONTRADO));
 
         YearMonth yearMonth = YearMonth.of(anio, mes);
         LocalDate startDate = yearMonth.atDay(1);
