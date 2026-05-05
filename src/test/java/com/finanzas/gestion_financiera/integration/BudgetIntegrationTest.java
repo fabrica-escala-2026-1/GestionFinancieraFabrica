@@ -27,7 +27,6 @@ import com.finanzas.gestion_financiera.dto.BudgetRequest;
 import com.finanzas.gestion_financiera.entity.Budget;
 import com.finanzas.gestion_financiera.entity.Category;
 import com.finanzas.gestion_financiera.entity.Transaction;
-import com.finanzas.gestion_financiera.entity.Category.TipoCategoria;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.BudgetRepository;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
