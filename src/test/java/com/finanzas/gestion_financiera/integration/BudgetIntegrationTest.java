@@ -1,11 +1,12 @@
 package com.finanzas.gestion_financiera.integration; // Ajusta a tu paquete real
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.hamcrest.Matchers.containsString;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,12 +22,17 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import com.finanzas.gestion_financiera.dto.BudgetRequest;
 import com.finanzas.gestion_financiera.entity.Budget;
 import com.finanzas.gestion_financiera.entity.Category;
+import com.finanzas.gestion_financiera.entity.Transaction;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.BudgetRepository;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
+import com.finanzas.gestion_financiera.repository.TransactionRepository;
 import com.finanzas.gestion_financiera.repository.UserRepository;
+
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -37,6 +43,9 @@ class BudgetIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired 
+    private ObjectMapper objectMapper;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -46,8 +55,13 @@ class BudgetIntegrationTest {
     @Autowired
     private BudgetRepository budgetRepository;
 
+    @Autowired
+    private TransactionRepository transactionRepository;
+
     private User testUser;
     private Category testCategory;
+    private Long categoryId;
+    private Long presupuestoId;
     
     @BeforeEach
     void setUp() {
@@ -65,6 +79,34 @@ class BudgetIntegrationTest {
         testCategory.setTipo(Category.TipoCategoria.GASTO);
         testCategory.setUsuario(testUser);
         categoryRepository.save(testCategory);
+
+        this.categoryId = testCategory.getId();
+    }
+
+    private void setupPresupuestoYGasto(BigDecimal montoPresupuesto, BigDecimal montoGasto) {
+        // 1. Limpiar tablas para evitar basura de otros tests
+        transactionRepository.deleteAll();
+        budgetRepository.deleteAll();
+
+        // 2. Crear presupuesto para el mes actual
+        Budget budget = new Budget();
+        budget.setCategory(testCategory); // Asume que ya la creaste en el @BeforeEach
+        budget.setAmount(montoPresupuesto);
+        budget.setStartMonth(LocalDate.now().getMonthValue());
+        budget.setStartYear(LocalDate.now().getYear());
+        budget.setDurationMonths(1);
+        
+        Budget savedBudget = budgetRepository.save(budget);
+        this.presupuestoId = savedBudget.getId();
+
+        // 3. Crear transacción de gasto para el mes actual
+        Transaction t = new Transaction();
+        t.setMonto(montoGasto);
+        t.setCategoria(testCategory);
+        t.setUsuario(testUser);
+        t.setFecha(LocalDate.now()); // Para que caiga en el rango del mes actual
+        t.setTipo("GASTO");
+        transactionRepository.save(t);
     }
 
     @Test
@@ -145,5 +187,70 @@ class BudgetIntegrationTest {
 
         mockMvc.perform(delete("/api/v1/presupuestos/" + budget.getId()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(username = "test@email.com")
+    void debeLanzarErrorSiYaExistePresupuestoActivo() throws Exception {
+        budgetRepository.deleteAll();
+        // 1. Primero creamos uno exitosamente
+        BudgetRequest request = new BudgetRequest(categoryId, new BigDecimal("500.00"), 3);
+        mockMvc.perform(post("/api/v1/presupuestos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        // 2. Intentamos crear exactamente el mismo presupuesto otra vez
+        mockMvc.perform(post("/api/v1/presupuestos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest()) // El Handler lo vuelve 400
+                .andExpect(jsonPath("$.mensaje").value("Ya existe un presupuesto activo para esta categoría en ese período"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@email.com")
+    void debeActualizarPresupuestoExistente() throws Exception {
+        setupPresupuestoYGasto(new BigDecimal("500.00"), BigDecimal.ZERO);
+        BudgetRequest updateRequest = new BudgetRequest(categoryId, new BigDecimal("1000.00"), 6);
+
+        mockMvc.perform(put("/api/v1/presupuestos/{id}", presupuestoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").value(1000.00));
+    }
+
+    @Test
+    @WithMockUser(username = "test@email.com")
+    void debeMostrarMensajeUsoNormalCuandoGastoEsBajo() throws Exception {
+        // Escenario: Presupuesto de 1,000,000 y Gasto de 100,000 (10%)
+        setupPresupuestoYGasto(new BigDecimal("1000000"), new BigDecimal("100000"));
+
+        mockMvc.perform(get("/api/v1/presupuestos/comparativa"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.budgetComparisonResponseList[0].porcentaje").value(10.0))
+                .andExpect(jsonPath("$._embedded.budgetComparisonResponseList[0].alerta").value(containsString("Llevas el 10.0% del presupuesto")));
+    }
+
+    @Test
+    @WithMockUser(username = "test@email.com")
+    void debeMostrarAlerta80CuandoSeAcercaAlLimite() throws Exception {
+        // Escenario: Presupuesto de 1,000,000 y Gasto de 850,000 (85%)
+        setupPresupuestoYGasto(new BigDecimal("1000000"), new BigDecimal("850000"));
+
+        mockMvc.perform(get("/api/v1/presupuestos/comparativa"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.budgetComparisonResponseList[0].porcentaje").value(85.0))
+                .andExpect(jsonPath("$._embedded.budgetComparisonResponseList[0].alerta").value(containsString("Has superado el 80% del presupuesto")));
+    }
+
+    @Test
+    @WithMockUser(username = "test@email.com")
+    void debeMostrarAlertaDeExcedidoEnComparativa() throws Exception {
+        setupPresupuestoYGasto(new BigDecimal("1000.00"), new BigDecimal("1200.00"));
+        mockMvc.perform(get("/api/v1/presupuestos/comparativa"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.budgetComparisonResponseList[0].alerta").value(containsString("Has excedido el presupuesto")));
     }
 }
