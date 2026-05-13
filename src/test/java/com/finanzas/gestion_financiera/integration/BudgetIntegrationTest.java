@@ -71,7 +71,7 @@ class BudgetIntegrationTest {
         testUser.setContrasena("123456");
         userRepository.save(testUser);
 
-        // 2. Crear la categoría (Usando el Enum interno de Category)
+        // 2. Crear la categoría
         testCategory = new Category();
         testCategory.setNombre("Alimentación");
         testCategory.setTipo(Category.TipoCategoria.GASTO);
@@ -88,7 +88,7 @@ class BudgetIntegrationTest {
 
         // 2. Crear presupuesto para el mes actual
         Budget budget = new Budget();
-        budget.setCategory(testCategory); // Asume que ya la creaste en el @BeforeEach
+        budget.setCategory(testCategory);
         budget.setAmount(montoPresupuesto);
         budget.setStartMonth(LocalDate.now().getMonthValue());
         budget.setStartYear(LocalDate.now().getYear());
@@ -165,7 +165,6 @@ class BudgetIntegrationTest {
     @Test // BI-04 Scenario A
     @WithMockUser(username = "test@email.com")
     void debeMostrarMensajeUsoNormalCuandoGastoEsBajo() throws Exception {
-        // Escenario: Presupuesto de 1,000,000 y Gasto de 100,000 (10%)
         setupPresupuestoYGasto(new BigDecimal("1000000"), new BigDecimal("100000"));
 
         mockMvc.perform(get("/api/v1/presupuestos/comparativa"))
@@ -178,7 +177,6 @@ class BudgetIntegrationTest {
     @Test // BI-04 Scenario B
     @WithMockUser(username = "test@email.com")
     void debeMostrarAlerta80CuandoSeAcercaAlLimite() throws Exception {
-        // Escenario: Presupuesto de 1,000,000 y Gasto de 850,000 (85%)
         setupPresupuestoYGasto(new BigDecimal("1000000"), new BigDecimal("850000"));
 
         mockMvc.perform(get("/api/v1/presupuestos/comparativa"))
@@ -217,13 +215,13 @@ class BudgetIntegrationTest {
     void actualizarPresupuesto_CategoriaInvalida() throws Exception {
         setupPresupuestoYGasto(new BigDecimal("500"), BigDecimal.ZERO);
 
-        // Intentamos actualizar con un ID de categoría que no existe (ej: 9999)
+        // Intentamos actualizar con un ID de categoría que no existe
         BudgetRequest updateRequest = new BudgetRequest(9999L, new BigDecimal("600"), 1);
 
         mockMvc.perform(put("/api/v1/presupuestos/{id}", presupuestoId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isBadRequest()); // O isNotFound() según tu manejo de errores
+                .andExpect(status().isBadRequest());
     }
 
     @Test // BI-07
@@ -232,7 +230,7 @@ class BudgetIntegrationTest {
     void actualizarPresupuesto_NoExiste() throws Exception {
         BudgetRequest updateRequest = new BudgetRequest(categoryId, new BigDecimal("600"), 1);
 
-        // Usamos un ID que sabemos que no existe (ej: 0 o un número muy alto)
+        // Usamos un ID que sabemos que no existe
         mockMvc.perform(put("/api/v1/presupuestos/999999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest)))
@@ -254,7 +252,7 @@ class BudgetIntegrationTest {
         mockMvc.perform(post("/api/v1/presupuestos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest()) // El Handler lo vuelve 400
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensaje")
                         .value("Ya existe un presupuesto activo para esta categoría en ese período"));
     }

@@ -81,8 +81,7 @@ class TransactionServiceTest {
                 .authorities(List.of())
                 .build();
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
-        );
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
 
         lenient().when(userRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testUser));
     }
@@ -231,16 +230,16 @@ class TransactionServiceTest {
             // Arrange
             Integer anio = 2026;
             Integer mes = 5;
-            
+
             GastoPorCategoriaResponse gastoMock = new GastoPorCategoriaResponse("Comida", new BigDecimal("150.00"));
             List<GastoPorCategoriaResponse> listaMock = List.of(gastoMock);
 
             doReturn(Optional.of(testUser)).when(userRepository).findByEmail("test@email.com");
-            
-            doReturn(listaMock).when(transactionRepository)
-                .obtenerGastosPorCategoriaDelMes(any(), any(), any());
 
-            // Act  
+            doReturn(listaMock).when(transactionRepository)
+                    .obtenerGastosPorCategoriaDelMes(any(), any(), any());
+
+            // Act
             ResumenGastosMensualesResponse respuesta = transactionService.obtenerResumenGastosPorCategoria(anio, mes);
 
             // Assert
@@ -253,9 +252,9 @@ class TransactionServiceTest {
         @DisplayName("Debe lanzar excepción si el tipo no es INGRESO ni GASTO")
         void crearTransaccionTipoInvalidoLanzaException() {
             TransactionRequest request = new TransactionRequest();
-            request.setTipo("OTRO"); // Rompe el primer if
+            request.setTipo("OTRO");
             request.setMonto(new BigDecimal("100.00"));
-            
+
             assertThrows(IllegalArgumentException.class, () -> {
                 transactionService.crear(request);
             });
@@ -266,8 +265,8 @@ class TransactionServiceTest {
         void crearTransaccionMontoInvalidoLanzaException() {
             TransactionRequest request = new TransactionRequest();
             request.setTipo("GASTO");
-            request.setMonto(BigDecimal.ZERO); // Rompe el segundo if (<= 0)
-            
+            request.setMonto(BigDecimal.ZERO);
+
             assertThrows(IllegalArgumentException.class, () -> {
                 transactionService.crear(request);
             });
