@@ -55,51 +55,40 @@ class JwtAuthFilterTest {
     }
 
     @Test
-    @DisplayName("Debe continuar sin autenticación si no hay header Authorization")
-    void debeContinuarSinAuthSiNoHayHeader() throws ServletException, IOException {
-        // Arrange - request sin header
-
-        // Act
+    @DisplayName("Should continue without authentication when Authorization header is missing")
+    void shouldContinueWithoutAuthWhenHeaderMissing() throws ServletException, IOException {
         jwtAuthFilter.doFilter(request, response, filterChain);
 
-        // Assert
         verify(filterChain).doFilter(request, response);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
-    @DisplayName("Debe continuar sin autenticación si header no empieza con Bearer")
-    void debeContinuarSiNoEsBearer() throws ServletException, IOException {
-        // Arrange
+    @DisplayName("Should continue without authentication when header does not start with Bearer")
+    void shouldContinueWhenHeaderIsNotBearer() throws ServletException, IOException {
         request.addHeader("Authorization", "Basic abc123");
 
-        // Act
         jwtAuthFilter.doFilter(request, response, filterChain);
 
-        // Assert
         verify(filterChain).doFilter(request, response);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
-    @DisplayName("Debe continuar sin autenticación si el token es inválido")
-    void debeContinuarSiTokenInvalido() throws ServletException, IOException {
-        // Arrange
+    @DisplayName("Should continue without authentication when token is invalid")
+    void shouldContinueWhenTokenIsInvalid() throws ServletException, IOException {
         request.addHeader("Authorization", "Bearer invalid-token");
         when(jwtService.isTokenValid("invalid-token")).thenReturn(false);
 
-        // Act
         jwtAuthFilter.doFilter(request, response, filterChain);
 
-        // Assert
         verify(filterChain).doFilter(request, response);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
-    @DisplayName("Debe establecer autenticación con token válido y usuario existente")
-    void debeEstablecerAuthConTokenValido() throws ServletException, IOException {
-        // Arrange
+    @DisplayName("Should set authentication when token is valid and user exists")
+    void shouldSetAuthenticationWhenTokenIsValid() throws ServletException, IOException {
         request.addHeader("Authorization", "Bearer valid-token");
         when(jwtService.isTokenValid("valid-token")).thenReturn(true);
         when(jwtService.extractEmail("valid-token")).thenReturn("test@email.com");
@@ -109,10 +98,8 @@ class JwtAuthFilterTest {
         user.setEmail("test@email.com");
         when(userRepository.findByEmail("test@email.com")).thenReturn(Optional.of(user));
 
-        // Act
         jwtAuthFilter.doFilter(request, response, filterChain);
 
-        // Assert
         verify(filterChain).doFilter(request, response);
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());
         assertEquals("test@email.com",
@@ -120,18 +107,15 @@ class JwtAuthFilterTest {
     }
 
     @Test
-    @DisplayName("Debe continuar sin autenticación si usuario no existe en BD")
-    void debeContinuarSiUsuarioNoExisteEnBD() throws ServletException, IOException {
-        // Arrange
+    @DisplayName("Should continue without authentication when user does not exist in DB")
+    void shouldContinueWhenUserDoesNotExistInDb() throws ServletException, IOException {
         request.addHeader("Authorization", "Bearer valid-token");
         when(jwtService.isTokenValid("valid-token")).thenReturn(true);
         when(jwtService.extractEmail("valid-token")).thenReturn("ghost@email.com");
         when(userRepository.findByEmail("ghost@email.com")).thenReturn(Optional.empty());
 
-        // Act
         jwtAuthFilter.doFilter(request, response, filterChain);
 
-        // Assert
         verify(filterChain).doFilter(request, response);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }

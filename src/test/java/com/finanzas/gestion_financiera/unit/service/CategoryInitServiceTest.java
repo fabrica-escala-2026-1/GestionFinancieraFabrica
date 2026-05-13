@@ -33,70 +33,58 @@ class CategoryInitServiceTest {
     private ArgumentCaptor<List<Category>> categoriesCaptor;
 
     @Test
-    @DisplayName("Debe crear exactamente 10 categorías por defecto")
-    void debeCrear10CategoriasPorDefecto() {
-        // Arrange
+    @DisplayName("Should create exactly 10 default categories")
+    void shouldCreate10DefaultCategories() {
         User user = new User();
         user.setId(1L);
         user.setEmail("test@email.com");
 
-        // Act
         categoryInitService.crearCategoriasPorDefecto(user);
 
-        // Assert
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
-        List<Category> categorias = categoriesCaptor.getValue();
-        assertEquals(10, categorias.size());
+        List<Category> categories = categoriesCaptor.getValue();
+        assertEquals(10, categories.size());
     }
 
     @Test
-    @DisplayName("Debe crear 4 categorías de tipo INGRESO")
-    void debeCrear4CategoriasIngreso() {
-        // Arrange
+    @DisplayName("Should create 4 INGRESO type categories")
+    void shouldCreate4IngresoCategories() {
         User user = new User();
         user.setId(1L);
 
-        // Act
         categoryInitService.crearCategoriasPorDefecto(user);
 
-        // Assert
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
-        long ingresos = categoriesCaptor.getValue().stream()
+        long incomeCount = categoriesCaptor.getValue().stream()
                 .filter(c -> c.getTipo() == TipoCategoria.INGRESO)
                 .count();
-        assertEquals(4, ingresos);
+        assertEquals(4, incomeCount);
     }
 
     @Test
-    @DisplayName("Debe crear 6 categorías de tipo GASTO")
-    void debeCrear6CategoriasGasto() {
-        // Arrange
+    @DisplayName("Should create 6 GASTO type categories")
+    void shouldCreate6GastoCategories() {
         User user = new User();
         user.setId(1L);
 
-        // Act
         categoryInitService.crearCategoriasPorDefecto(user);
 
-        // Assert
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
-        long gastos = categoriesCaptor.getValue().stream()
+        long expenseCount = categoriesCaptor.getValue().stream()
                 .filter(c -> c.getTipo() == TipoCategoria.GASTO)
                 .count();
-        assertEquals(6, gastos);
+        assertEquals(6, expenseCount);
     }
 
     @Test
-    @DisplayName("Todas las categorías deben estar asociadas al usuario proporcionado")
-    void todasDebenEstarAsociadasAlUsuario() {
-        // Arrange
+    @DisplayName("All categories should be associated with the provided user")
+    void allShouldBelongToUser() {
         User user = new User();
         user.setId(5L);
         user.setEmail("owner@email.com");
 
-        // Act
         categoryInitService.crearCategoriasPorDefecto(user);
 
-        // Assert
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
         boolean allBelongToUser = categoriesCaptor.getValue().stream()
                 .allMatch(c -> c.getUsuario().equals(user));
@@ -104,48 +92,42 @@ class CategoryInitServiceTest {
     }
 
     @Test
-    @DisplayName("Debe incluir las categorías de ingreso esperadas")
-    void debeIncluirCategoriasIngresoEsperadas() {
-        // Arrange
+    @DisplayName("Should include the expected income categories")
+    void shouldIncludeExpectedIncomeCategories() {
         User user = new User();
         user.setId(1L);
 
-        // Act
         categoryInitService.crearCategoriasPorDefecto(user);
 
-        // Assert
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
-        List<String> nombres = categoriesCaptor.getValue().stream()
+        List<String> names = categoriesCaptor.getValue().stream()
                 .filter(c -> c.getTipo() == TipoCategoria.INGRESO)
                 .map(Category::getNombre)
                 .toList();
-        assertTrue(nombres.contains("Salario"));
-        assertTrue(nombres.contains("Freelance"));
-        assertTrue(nombres.contains("Inversiones"));
-        assertTrue(nombres.contains("Otros ingresos"));
+        assertTrue(names.contains("Salario"));
+        assertTrue(names.contains("Freelance"));
+        assertTrue(names.contains("Inversiones"));
+        assertTrue(names.contains("Otros ingresos"));
     }
 
     @Test
-    @DisplayName("Debe incluir las categorías de gasto esperadas")
-    void debeIncluirCategoriasGastoEsperadas() {
-        // Arrange
+    @DisplayName("Should include the expected expense categories")
+    void shouldIncludeExpectedExpenseCategories() {
         User user = new User();
         user.setId(1L);
 
-        // Act
         categoryInitService.crearCategoriasPorDefecto(user);
 
-        // Assert
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
-        List<String> nombres = categoriesCaptor.getValue().stream()
+        List<String> names = categoriesCaptor.getValue().stream()
                 .filter(c -> c.getTipo() == TipoCategoria.GASTO)
                 .map(Category::getNombre)
                 .toList();
-        assertTrue(nombres.contains("Alimentación"));
-        assertTrue(nombres.contains("Transporte"));
-        assertTrue(nombres.contains("Vivienda"));
-        assertTrue(nombres.contains("Salud"));
-        assertTrue(nombres.contains("Entretenimiento"));
-        assertTrue(nombres.contains("Educación"));
+        assertTrue(names.contains("Alimentación"));
+        assertTrue(names.contains("Transporte"));
+        assertTrue(names.contains("Vivienda"));
+        assertTrue(names.contains("Salud"));
+        assertTrue(names.contains("Entretenimiento"));
+        assertTrue(names.contains("Educación"));
     }
 }

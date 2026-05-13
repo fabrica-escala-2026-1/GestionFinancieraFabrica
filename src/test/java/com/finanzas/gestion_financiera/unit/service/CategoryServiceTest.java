@@ -70,12 +70,11 @@ class CategoryServiceTest {
 
     @Nested
     @DisplayName("crear()")
-    class Crear {
+    class Create {
 
         @Test
-        @DisplayName("Debe crear categoría de tipo INGRESO correctamente")
-        void debeCrearCategoriaIngreso() {
-            // Arrange
+        @DisplayName("Should create an INGRESO type category correctly")
+        void shouldCreateIncomeCategory() {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Bonificación");
             request.setTipo(TipoCategoria.INGRESO);
@@ -86,10 +85,8 @@ class CategoryServiceTest {
                 return c;
             });
 
-            // Act
             CategoryResponse response = categoryService.crear(request);
 
-            // Assert
             assertNotNull(response);
             assertEquals("Bonificación", response.getNombre());
             assertEquals(TipoCategoria.INGRESO, response.getTipo());
@@ -97,9 +94,8 @@ class CategoryServiceTest {
         }
 
         @Test
-        @DisplayName("Debe crear categoría de tipo GASTO correctamente")
-        void debeCrearCategoriaGasto() {
-            // Arrange
+        @DisplayName("Should create a GASTO type category correctly")
+        void shouldCreateExpenseCategory() {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Restaurantes");
             request.setTipo(TipoCategoria.GASTO);
@@ -110,10 +106,8 @@ class CategoryServiceTest {
                 return c;
             });
 
-            // Act
             CategoryResponse response = categoryService.crear(request);
 
-            // Assert
             assertEquals("Restaurantes", response.getNombre());
             assertEquals(TipoCategoria.GASTO, response.getTipo());
         }
@@ -121,12 +115,11 @@ class CategoryServiceTest {
 
     @Nested
     @DisplayName("listar()")
-    class Listar {
+    class List_ {
 
         @Test
-        @DisplayName("Debe listar categorías del usuario autenticado")
-        void debeListarCategoriasDelUsuario() {
-            // Arrange
+        @DisplayName("Should list categories of the authenticated user")
+        void shouldListUserCategories() {
             Category cat1 = new Category();
             cat1.setId(1L);
             cat1.setNombre("Salario");
@@ -141,37 +134,31 @@ class CategoryServiceTest {
 
             when(categoryRepository.findByUsuarioId(1L)).thenReturn(List.of(cat1, cat2));
 
-            // Act
             List<CategoryResponse> result = categoryService.listar();
 
-            // Assert
             assertEquals(2, result.size());
             assertEquals("Salario", result.get(0).getNombre());
             assertEquals("Alimentación", result.get(1).getNombre());
         }
 
         @Test
-        @DisplayName("Debe retornar lista vacía si no tiene categorías")
-        void debeRetornarListaVacia() {
-            // Arrange
+        @DisplayName("Should return an empty list when there are no categories")
+        void shouldReturnEmptyList() {
             when(categoryRepository.findByUsuarioId(1L)).thenReturn(List.of());
 
-            // Act
             List<CategoryResponse> result = categoryService.listar();
 
-            // Assert
             assertTrue(result.isEmpty());
         }
     }
 
     @Nested
     @DisplayName("obtener()")
-    class Obtener {
+    class Get {
 
         @Test
-        @DisplayName("Debe obtener categoría por ID del usuario autenticado")
-        void debeObtenerCategoriaPorId() {
-            // Arrange
+        @DisplayName("Should fetch the category by ID for the authenticated user")
+        void shouldGetCategoryById() {
             Category category = new Category();
             category.setId(5L);
             category.setNombre("Transporte");
@@ -180,22 +167,18 @@ class CategoryServiceTest {
 
             when(categoryRepository.findByIdAndUsuarioId(5L, 1L)).thenReturn(Optional.of(category));
 
-            // Act
             CategoryResponse response = categoryService.obtener(5L);
 
-            // Assert
             assertEquals(5L, response.getId());
             assertEquals("Transporte", response.getNombre());
             assertEquals(TipoCategoria.GASTO, response.getTipo());
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción si la categoría no existe")
-        void debeLanzarExcepcionSiNoExiste() {
-            // Arrange
+        @DisplayName("Should throw exception when the category does not exist")
+        void shouldThrowExceptionWhenNotFound() {
             when(categoryRepository.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
                     () -> categoryService.obtener(99L));
             assertEquals("Categoría no encontrada", exception.getMessage());
@@ -204,12 +187,11 @@ class CategoryServiceTest {
 
     @Nested
     @DisplayName("actualizar()")
-    class Actualizar {
+    class Update {
 
         @Test
-        @DisplayName("Debe actualizar nombre y tipo de categoría existente")
-        void debeActualizarCategoria() {
-            // Arrange
+        @DisplayName("Should update name and type of an existing category")
+        void shouldUpdateCategory() {
             Category existing = new Category();
             existing.setId(3L);
             existing.setNombre("Vieja");
@@ -223,26 +205,22 @@ class CategoryServiceTest {
             when(categoryRepository.findByIdAndUsuarioId(3L, 1L)).thenReturn(Optional.of(existing));
             when(categoryRepository.save(any(Category.class))).thenAnswer(i -> i.getArgument(0));
 
-            // Act
             CategoryResponse response = categoryService.actualizar(3L, request);
 
-            // Assert
             assertEquals("Nueva", response.getNombre());
             assertEquals(TipoCategoria.INGRESO, response.getTipo());
             verify(categoryRepository).save(existing);
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción al actualizar categoría inexistente")
-        void debeLanzarExcepcionAlActualizarInexistente() {
-            // Arrange
+        @DisplayName("Should throw exception when updating a nonexistent category")
+        void shouldThrowExceptionWhenUpdatingNonexistent() {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Test");
             request.setTipo(TipoCategoria.GASTO);
 
             when(categoryRepository.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(RuntimeException.class,
                     () -> categoryService.actualizar(99L, request));
         }
@@ -250,12 +228,11 @@ class CategoryServiceTest {
 
     @Nested
     @DisplayName("eliminar()")
-    class Eliminar {
+    class Delete {
 
         @Test
-        @DisplayName("Debe eliminar categoría existente del usuario")
-        void debeEliminarCategoria() {
-            // Arrange
+        @DisplayName("Should delete an existing category for the user")
+        void shouldDeleteCategory() {
             Category category = new Category();
             category.setId(4L);
             category.setNombre("Temporal");
@@ -264,20 +241,16 @@ class CategoryServiceTest {
 
             when(categoryRepository.findByIdAndUsuarioId(4L, 1L)).thenReturn(Optional.of(category));
 
-            // Act
             categoryService.eliminar(4L);
 
-            // Assert
             verify(categoryRepository).delete(category);
         }
 
         @Test
-        @DisplayName("Debe lanzar excepción al eliminar categoría inexistente")
-        void debeLanzarExcepcionAlEliminarInexistente() {
-            // Arrange
+        @DisplayName("Should throw exception when deleting a nonexistent category")
+        void shouldThrowExceptionWhenDeletingNonexistent() {
             when(categoryRepository.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(RuntimeException.class,
                     () -> categoryService.eliminar(99L));
         }
