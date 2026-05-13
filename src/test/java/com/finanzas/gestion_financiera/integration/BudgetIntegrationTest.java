@@ -107,7 +107,7 @@ class BudgetIntegrationTest {
         transactionRepository.save(t);
     }
 
-    @Test // CF-09
+    @Test // BI-01
     @WithMockUser(username = "test@email.com")
     @DisplayName("POST /api/v1/presupuestos - Crear presupuesto exitoso")
     void crearPresupuesto_Exito() throws Exception {
@@ -126,7 +126,7 @@ class BudgetIntegrationTest {
                 .andExpect(jsonPath("$.amount").value(2000.00));
     }
 
-    @Test // CF-10
+    @Test // BI-02
     @WithMockUser(username = "test@email.com")
     @DisplayName("POST /api/v1/presupuestos - Error por monto inválido")
     void crearPresupuesto_MontoInvalido() throws Exception {
@@ -144,7 +144,7 @@ class BudgetIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test // CF-11
+    @Test // BI-03
     @WithMockUser(username = "test@email.com")
     @DisplayName("GET /api/v1/presupuestos - Listar presupuestos del usuario")
     void listarPresupuestos_Exito() throws Exception {
@@ -162,7 +162,7 @@ class BudgetIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(greaterThanOrEqualTo(1)));
     }
 
-    @Test // CF-12 - Scenario A
+    @Test // BI-04 Scenario A
     @WithMockUser(username = "test@email.com")
     void debeMostrarMensajeUsoNormalCuandoGastoEsBajo() throws Exception {
         // Escenario: Presupuesto de 1,000,000 y Gasto de 100,000 (10%)
@@ -175,7 +175,7 @@ class BudgetIntegrationTest {
                         .value(containsString("Llevas el 10.0% del presupuesto")));
     }
 
-    @Test // CF-12 - Scenario B
+    @Test // BI-04 Scenario B
     @WithMockUser(username = "test@email.com")
     void debeMostrarAlerta80CuandoSeAcercaAlLimite() throws Exception {
         // Escenario: Presupuesto de 1,000,000 y Gasto de 850,000 (85%)
@@ -188,7 +188,7 @@ class BudgetIntegrationTest {
                         .value(containsString("Has superado el 80% del presupuesto")));
     }
 
-    @Test // CF-12 - Scenario C
+    @Test // BI-04 Scenario C
     @WithMockUser(username = "test@email.com")
     void debeMostrarAlertaDeExcedidoEnComparativa() throws Exception {
         setupPresupuestoYGasto(new BigDecimal("1000.00"), new BigDecimal("1200.00"));
@@ -198,7 +198,7 @@ class BudgetIntegrationTest {
                         .value(containsString("Has excedido el presupuesto")));
     }
 
-    @Test // CF-13
+    @Test // BI-05
     @WithMockUser(username = "test@email.com")
     void debeActualizarPresupuestoExistente() throws Exception {
         setupPresupuestoYGasto(new BigDecimal("500.00"), BigDecimal.ZERO);
@@ -211,7 +211,7 @@ class BudgetIntegrationTest {
                 .andExpect(jsonPath("$.amount").value(1000.00));
     }
 
-    @Test // CF-14
+    @Test // BI-06
     @WithMockUser(username = "test@email.com")
     @DisplayName("PUT /api/v1/presupuestos/{id} - Error por categoría no válida")
     void actualizarPresupuesto_CategoriaInvalida() throws Exception {
@@ -226,7 +226,7 @@ class BudgetIntegrationTest {
                 .andExpect(status().isBadRequest()); // O isNotFound() según tu manejo de errores
     }
 
-    @Test // CF-15
+    @Test // BI-07
     @WithMockUser(username = "test@email.com")
     @DisplayName("PUT /api/v1/presupuestos/{id} - Actualizar presupuesto inexistente")
     void actualizarPresupuesto_NoExiste() throws Exception {
@@ -239,7 +239,7 @@ class BudgetIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test // CF-16
+    @Test // BI-08
     @WithMockUser(username = "test@email.com")
     void debeLanzarErrorSiYaExistePresupuestoActivo() throws Exception {
         budgetRepository.deleteAll();
@@ -259,7 +259,7 @@ class BudgetIntegrationTest {
                         .value("Ya existe un presupuesto activo para esta categoría en ese período"));
     }
 
-    @Test // CF-17
+    @Test // BI-09
     @WithMockUser(username = "test@email.com")
     @DisplayName("DELETE /api/v1/presupuestos/{id} - Eliminar presupuesto")
     void eliminarPresupuesto_Exito() throws Exception {
@@ -276,7 +276,7 @@ class BudgetIntegrationTest {
                 .andExpect(status().isNoContent());
     }
 
-    @Test // CF-18
+    @Test // BI-10
     @WithMockUser(username = "test@email.com")
     @DisplayName("DELETE /api/v1/presupuestos/{id} - Eliminar inexistente")
     void eliminarPresupuesto_NoExiste() throws Exception {
