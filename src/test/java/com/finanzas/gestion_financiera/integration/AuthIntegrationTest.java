@@ -1,4 +1,4 @@
-package com.finanzas.gestion_financiera.feature;
+package com.finanzas.gestion_financiera.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finanzas.gestion_financiera.controller.AuthController;
@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Auth Feature - API /api/v1/auth")
-class AuthControllerFeatureTest {
+class AuthIntegrationTest {
 
     private MockMvc mockMvc;
 
