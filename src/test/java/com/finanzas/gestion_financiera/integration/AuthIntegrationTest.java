@@ -8,7 +8,6 @@ import com.finanzas.gestion_financiera.dto.RegisterRequest;
 import com.finanzas.gestion_financiera.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Auth Feature - API /api/v1/auth")
+@DisplayName("Auth Integration Tests for SonarQube Coverage")
 class AuthIntegrationTest {
 
     private MockMvc mockMvc;
@@ -42,147 +41,137 @@ class AuthIntegrationTest {
         mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
     }
 
-    @Nested
-    @DisplayName("POST /api/v1/auth/register")
-    class RegisterEndpoint {
+    @Test // AF-01
+    @DisplayName("POST /api/v1/auth/register - Registro exitoso")
+    void registrarUsuario_Exito() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setPrimer_nombre("Juan");
+        request.setApellido("Pérez");
+        request.setEmail("juan@email.com");
+        request.setContrasena("Password1!");
 
-        @Test
-        @DisplayName("Should register user and return 200 with token")
-        void shouldRegisterUserSuccessfully() throws Exception {
-            RegisterRequest request = new RegisterRequest();
-            request.setPrimer_nombre("Juan");
-            request.setApellido("Pérez");
-            request.setEmail("juan@email.com");
-            request.setContrasena("Password1!");
+        AuthResponse authResponse = new AuthResponse("jwt-token", "juan@email.com", "Juan");
+        when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
 
-            AuthResponse authResponse = new AuthResponse("jwt-token", "juan@email.com", "Juan");
-            when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").value("jwt-token"))
-                    .andExpect(jsonPath("$.email").value("juan@email.com"))
-                    .andExpect(jsonPath("$.primer_nombre").value("Juan"));
-        }
-
-        @Test
-        @DisplayName("Should return 400 when first name is empty")
-        void shouldReturn400WhenFirstNameIsEmpty() throws Exception {
-            RegisterRequest request = new RegisterRequest();
-            request.setPrimer_nombre("");
-            request.setApellido("Pérez");
-            request.setEmail("juan@email.com");
-            request.setContrasena("Password1!");
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("Should return 400 when email is invalid")
-        void shouldReturn400WhenEmailIsInvalid() throws Exception {
-            RegisterRequest request = new RegisterRequest();
-            request.setPrimer_nombre("Juan");
-            request.setApellido("Pérez");
-            request.setEmail("no-es-email");
-            request.setContrasena("Password1!");
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("Should return 400 when password does not meet requirements")
-        void shouldReturn400WhenPasswordIsWeak() throws Exception {
-            RegisterRequest request = new RegisterRequest();
-            request.setPrimer_nombre("Juan");
-            request.setApellido("Pérez");
-            request.setEmail("juan@email.com");
-            request.setContrasena("simple");
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("Should return 400 when last name is missing")
-        void shouldReturn400WhenLastNameIsMissing() throws Exception {
-            RegisterRequest request = new RegisterRequest();
-            request.setPrimer_nombre("Juan");
-            request.setApellido("");
-            request.setEmail("juan@email.com");
-            request.setContrasena("Password1!");
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("Should return 400 when body is empty")
-        void shouldReturn400WhenBodyIsEmpty() throws Exception {
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"))
-                    .andExpect(status().isBadRequest());
-        }
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.email").value("juan@email.com"))
+                .andExpect(jsonPath("$.primer_nombre").value("Juan"));
     }
 
-    @Nested
-    @DisplayName("POST /api/v1/auth/login")
-    class LoginEndpoint {
+    @Test // AF-02
+    @DisplayName("POST /api/v1/auth/register - Error por nombre vacío")
+    void registrarUsuario_NombreVacio() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setPrimer_nombre("");
+        request.setApellido("Pérez");
+        request.setEmail("juan@email.com");
+        request.setContrasena("Password1!");
 
-        @Test
-        @DisplayName("Should authenticate and return 200 with token")
-        void shouldAuthenticateSuccessfully() throws Exception {
-            LoginRequest request = new LoginRequest();
-            request.setEmail("juan@email.com");
-            request.setContrasena("Password1!");
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
 
-            AuthResponse authResponse = new AuthResponse("jwt-token", "juan@email.com", "Juan");
-            when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
+    @Test // AF-03
+    @DisplayName("POST /api/v1/auth/register - Error por email inválido")
+    void registrarUsuario_EmailInvalido() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setPrimer_nombre("Juan");
+        request.setApellido("Pérez");
+        request.setEmail("no-es-email");
+        request.setContrasena("Password1!");
 
-            mockMvc.perform(post("/api/v1/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").value("jwt-token"))
-                    .andExpect(jsonPath("$.email").value("juan@email.com"));
-        }
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
 
-        @Test
-        @DisplayName("Should return 400 when email is empty")
-        void shouldReturn400WhenEmailIsEmpty() throws Exception {
-            LoginRequest request = new LoginRequest();
-            request.setEmail("");
-            request.setContrasena("Password1!");
+    @Test // AF-04
+    @DisplayName("POST /api/v1/auth/register - Error por contraseña débil")
+    void registrarUsuario_ContrasenaDebil() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setPrimer_nombre("Juan");
+        request.setApellido("Pérez");
+        request.setEmail("juan@email.com");
+        request.setContrasena("simple");
 
-            mockMvc.perform(post("/api/v1/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
 
-        @Test
-        @DisplayName("Should return 400 when password is missing")
-        void shouldReturn400WhenPasswordIsMissing() throws Exception {
-            LoginRequest request = new LoginRequest();
-            request.setEmail("juan@email.com");
-            request.setContrasena("");
+    @Test // AF-05
+    @DisplayName("POST /api/v1/auth/register - Error por apellido vacío")
+    void registrarUsuario_ApellidoVacio() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setPrimer_nombre("Juan");
+        request.setApellido("");
+        request.setEmail("juan@email.com");
+        request.setContrasena("Password1!");
 
-            mockMvc.perform(post("/api/v1/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test // AF-06
+    @DisplayName("POST /api/v1/auth/register - Error por body vacío")
+    void registrarUsuario_BodyVacio() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test // AF-07
+    @DisplayName("POST /api/v1/auth/login - Login exitoso")
+    void login_Exito() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("juan@email.com");
+        request.setContrasena("Password1!");
+
+        AuthResponse authResponse = new AuthResponse("jwt-token", "juan@email.com", "Juan");
+        when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.email").value("juan@email.com"));
+    }
+
+    @Test // AF-08
+    @DisplayName("POST /api/v1/auth/login - Error por email vacío")
+    void login_EmailVacio() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("");
+        request.setContrasena("Password1!");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test // AF-09
+    @DisplayName("POST /api/v1/auth/login - Error por contraseña vacía")
+    void login_ContrasenaVacia() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("juan@email.com");
+        request.setContrasena("");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }
