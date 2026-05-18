@@ -16,24 +16,23 @@ public class CategoryInitService {
 
     public void crearCategoriasPorDefecto(User user) {
         List<Category> categorias = List.of(
-                crearCategoria("Salario",       Category.TipoCategoria.INGRESO, user),
-                crearCategoria("Freelance",     Category.TipoCategoria.INGRESO, user),
-                crearCategoria("Inversiones",   Category.TipoCategoria.INGRESO, user),
-                crearCategoria("Otros ingresos",Category.TipoCategoria.INGRESO, user),
-                crearCategoria("Alimentación",  Category.TipoCategoria.GASTO,   user),
-                crearCategoria("Transporte",    Category.TipoCategoria.GASTO,   user),
-                crearCategoria("Vivienda",      Category.TipoCategoria.GASTO,   user),
-                crearCategoria("Salud",         Category.TipoCategoria.GASTO,   user),
-                crearCategoria("Entretenimiento",Category.TipoCategoria.GASTO,  user),
-                crearCategoria("Educación",     Category.TipoCategoria.GASTO,   user)
+                crearCategoria("Salario",        user),
+                crearCategoria("Freelance",      user),
+                crearCategoria("Inversiones",    user),
+                crearCategoria("Otros ingresos", user),
+                crearCategoria("Alimentación",   user),
+                crearCategoria("Transporte",     user),
+                crearCategoria("Vivienda",       user),
+                crearCategoria("Salud",          user),
+                crearCategoria("Entretenimiento",user),
+                crearCategoria("Educación",      user)
         );
         categoryRepository.saveAll(categorias);
     }
 
-    private Category crearCategoria(String nombre, Category.TipoCategoria tipo, User user) {
+    private Category crearCategoria(String nombre, User user) {
         Category category = new Category();
         category.setNombre(nombre);
-        category.setTipo(tipo);
         category.setUsuario(user);
         return category;
     }

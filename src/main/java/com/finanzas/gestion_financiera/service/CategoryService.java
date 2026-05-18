@@ -24,7 +24,6 @@ public class CategoryService {
         User user = getUsuarioAutenticado();
         Category category = new Category();
         category.setNombre(request.getNombre());
-        category.setTipo(request.getTipo());
         category.setUsuario(user);
         categoryRepository.save(category);
         return toResponse(category);
@@ -50,7 +49,6 @@ public class CategoryService {
         Category category = categoryRepository.findByIdAndUsuarioId(id, user.getId())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
         category.setNombre(request.getNombre());
-        category.setTipo(request.getTipo());
         categoryRepository.save(category);
         return toResponse(category);
     }
@@ -69,6 +67,6 @@ public class CategoryService {
     }
 
     private CategoryResponse toResponse(Category category) {
-        return new CategoryResponse(category.getId(), category.getNombre(), category.getTipo());
+        return new CategoryResponse(category.getId(), category.getNombre());
     }
 }

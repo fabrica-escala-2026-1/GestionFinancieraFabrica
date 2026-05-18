@@ -27,22 +27,6 @@ public class GlobalExceptionHandlerController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errores);
     }
 
-    // Valor de enum inválido — se detecta revisando el mensaje de la excepción
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, String>> handleNotReadable(
-            HttpMessageNotReadableException ex) {
-
-        Map<String, String> error = new HashMap<>();
-
-        if (ex.getMessage() != null && ex.getMessage().contains("TipoCategoria")) {
-            error.put("tipo", "El tipo es obligatorio, debe ser INGRESO o GASTO");
-        } else {
-            error.put("mensaje", "El cuerpo de la solicitud no es válido");
-        }
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
     // Errores de negocio
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
