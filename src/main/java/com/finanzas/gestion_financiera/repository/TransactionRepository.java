@@ -41,4 +41,19 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query("""
+    SELECT COALESCE(SUM(t.monto), 0)
+    FROM Transaction t
+    WHERE t.usuario.id = :userId
+      AND t.tipo = :tipo
+      AND t.fecha >= :startDate
+      AND t.fecha <= :endDate
+    """)
+    BigDecimal sumByTipoAndUsuarioAndPeriod(
+            @Param("userId") Long userId,
+            @Param("tipo") String tipo,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }
