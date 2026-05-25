@@ -10,6 +10,7 @@ import com.finanzas.gestion_financiera.repository.BudgetRepository;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
 import com.finanzas.gestion_financiera.repository.TransactionRepository;
 import com.finanzas.gestion_financiera.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ public class BudgetService {
 
         Category category = categoryRepository
                 .findByIdAndUsuarioId(request.getCategoryId(), user.getId())
-                .orElseThrow(() -> new RuntimeException("Categoría no válida"));
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no válida"));
 
         YearMonth now = YearMonth.now();
         int currentMonth = now.getMonthValue();
@@ -44,11 +44,10 @@ public class BudgetService {
 
         YearMonth endYearMonth = now.plusMonths(request.getDurationMonths());
 
-        // Validar que no exista presupuesto activo para esa categoría en el período
         if (budgetRepository.existsActiveBudgetForCategory(
                 request.getCategoryId(), currentMonth, currentYear,
                 endYearMonth.getMonthValue(), endYearMonth.getYear())) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "Ya existe un presupuesto activo para esta categoría en ese período");
         }
 
@@ -68,7 +67,7 @@ public class BudgetService {
         return budgetRepository.findByCategoryUsuarioId(user.getId())
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public BudgetResponse update(Long id, BudgetRequest request) {
@@ -76,11 +75,11 @@ public class BudgetService {
 
         Budget budget = budgetRepository
                 .findByIdAndCategoryUsuarioId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Presupuesto no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado"));
 
         Category category = categoryRepository
                 .findByIdAndUsuarioId(request.getCategoryId(), user.getId())
-                .orElseThrow(() -> new RuntimeException("Categoría no válida"));
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no válida"));
 
         budget.setCategory(category);
         budget.setAmount(request.getAmount());
@@ -94,7 +93,7 @@ public class BudgetService {
         User user = getAuthenticatedUser();
         Budget budget = budgetRepository
                 .findByIdAndCategoryUsuarioId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Presupuesto no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado"));
         budgetRepository.delete(budget);
     }
 
@@ -102,12 +101,10 @@ public class BudgetService {
         User user = getAuthenticatedUser();
         YearMonth now = YearMonth.now();
 
-        // Obtener todas las categorías del usuario — ya no filtramos por tipo
         List<Category> categorias = categoryRepository.findByUsuarioId(user.getId());
 
         return categorias.stream()
                 .map(category -> {
-
                     Optional<Budget> budgetOpt = budgetRepository
                             .findActiveBudgetForCategoryAndMonth(
                                     category.getId(),
@@ -122,7 +119,6 @@ public class BudgetService {
                                     category.getId(), user.getId(),
                                     startDate, endDate);
 
-                    // Sin presupuesto asignado
                     if (budgetOpt.isEmpty()) {
                         return new BudgetComparisonResponse(
                                 category.getNombre(), null, gastado,
@@ -157,14 +153,14 @@ public class BudgetService {
                             category.getNombre(), limite, gastado,
                             disponible, porcentaje, alerta);
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private User getAuthenticatedUser() {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
     }
 
     private BudgetResponse toResponse(Budget budget) {

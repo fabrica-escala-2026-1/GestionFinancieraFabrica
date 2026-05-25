@@ -6,12 +6,12 @@ import com.finanzas.gestion_financiera.entity.Category;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
 import com.finanzas.gestion_financiera.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,20 +34,20 @@ public class CategoryService {
         return categoryRepository.findByUsuarioId(user.getId())
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public CategoryResponse obtener(Long id) {
         User user = getUsuarioAutenticado();
         Category category = categoryRepository.findByIdAndUsuarioId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
         return toResponse(category);
     }
 
     public CategoryResponse actualizar(Long id, CategoryRequest request) {
         User user = getUsuarioAutenticado();
         Category category = categoryRepository.findByIdAndUsuarioId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
         category.setNombre(request.getNombre());
         categoryRepository.save(category);
         return toResponse(category);
@@ -56,14 +56,14 @@ public class CategoryService {
     public void eliminar(Long id) {
         User user = getUsuarioAutenticado();
         Category category = categoryRepository.findByIdAndUsuarioId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
         categoryRepository.delete(category);
     }
 
     private User getUsuarioAutenticado() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
     }
 
     private CategoryResponse toResponse(Category category) {

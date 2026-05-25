@@ -7,23 +7,23 @@ import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final UserRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final CategoryInitService categoryInitService;
 
     public AuthResponse register(RegisterRequest request) {
-
-        // Si el email ya existe, el GlobalExceptionHandler convierte
-        // este RuntimeException en: { "mensaje": "El nombre de usuario ya se encuentra registrado" }
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("El email ya se encuentra registrado");
+        if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new DuplicateKeyException("El nombre de usuario ya se encuentra registrado");
         }
 
         User user = new User();
@@ -32,7 +32,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setContrasena(passwordEncoder.encode(request.getContrasena()));
 
-        userRepository.save(user);
+        usuarioRepository.save(user);
         categoryInitService.crearCategoriasPorDefecto(user);
 
         String token = jwtService.generateToken(user.getEmail());
@@ -40,15 +40,11 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        User user = usuarioRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("Credenciales inválidas"));
 
-        // Email no encontrado → misma respuesta genérica que contraseña incorrecta
-        // para no revelar si el email existe o no (buena práctica de seguridad)
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
-
-        // Contraseña incorrecta → mismo mensaje
         if (!passwordEncoder.matches(request.getContrasena(), user.getContrasena())) {
-            throw new RuntimeException("Credenciales inválidas");
+            throw new BadCredentialsException("Credenciales inválidas");
         }
 
         String token = jwtService.generateToken(user.getEmail());
