@@ -19,6 +19,9 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandlerController {
 
+    // Constante para evitar duplicación del literal "mensaje"
+    private static final String MESSAGE_KEY = "mensaje";
+
     // Errores de @Valid
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationErrors(
@@ -30,35 +33,50 @@ public class GlobalExceptionHandlerController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errores);
     }
 
-    // Errores de negocio
+    // Valor de enum inválido
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleNotReadable(
+            HttpMessageNotReadableException ex) {
+
+        Map<String, String> error = new HashMap<>();
+        if (ex.getMessage() != null && ex.getMessage().contains("TipoCategoria")) {
+            error.put("tipo", "El tipo es obligatorio, debe ser INGRESO o GASTO");
+        } else {
+            error.put(MESSAGE_KEY, "El cuerpo de la solicitud no es válido");
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // Credenciales inválidas — 401
+    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class})
+    public ResponseEntity<Map<String, String>> handleAuthExceptions(RuntimeException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put(MESSAGE_KEY, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    // Email duplicado — 409
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateKey(DuplicateKeyException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put(MESSAGE_KEY, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    // Errores de negocio — 400
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
             RuntimeException ex) {
 
         Map<String, String> error = new HashMap<>();
-        error.put("mensaje", ex.getMessage());
+        error.put(MESSAGE_KEY, ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // Errores cuando no se encuentra una entidad
+    // Entidad no encontrada — 404
     @ExceptionHandler(EntityNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // <-- Aquí ocurre la magia para el test
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(EntityNotFoundException ex) {
-        return Map.of("mensaje", ex.getMessage());
+        return Map.of(MESSAGE_KEY, ex.getMessage());
     }
-
-    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class})
-    public ResponseEntity<Map<String, String>> handleAuthExceptions(RuntimeException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("mensaje", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-    }
-
-    @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicateKey(DuplicateKeyException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("mensaje", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
-
 }

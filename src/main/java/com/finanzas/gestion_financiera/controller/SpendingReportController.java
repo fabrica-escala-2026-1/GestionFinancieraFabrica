@@ -33,13 +33,14 @@ public class SpendingReportController {
     @GetMapping("/current-month")
     public ResponseEntity<SpendingReportResponse> getCurrentMonthReport() {
         SpendingReportResponse response = spendingReportService.getCurrentMonthReport();
+        YearMonth now = YearMonth.now();
         response.add(
                 linkTo(methodOn(SpendingReportController.class)
                         .getCurrentMonthReport()).withSelfRel(),
                 linkTo(methodOn(SpendingReportController.class)
                         .getComparativeReport(
-                                YearMonth.now().getYear(), YearMonth.now().getMonthValue(),
-                                YearMonth.now().getYear(), YearMonth.now().getMonthValue()))
+                                now.getYear(), now.getMonthValue(),
+                                now.getYear(), now.getMonthValue()))
                         .withRel("comparative")
         );
         return ResponseEntity.ok(response);

@@ -24,6 +24,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Crear categoría")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Categoría creada exitosamente"),
@@ -35,6 +36,7 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.crear(request));
     }
 
+    // Un solo response → sin @ApiResponses
     @Operation(summary = "Listar categorías")
     @ApiResponse(responseCode = "200", description = "Lista de categorías del usuario")
     @GetMapping
@@ -42,20 +44,22 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.listar());
     }
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Obtener categoría por ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Categoría encontrada"),
-            @ApiResponse(responseCode = "400", description = "Categoría no encontrada")
+            @ApiResponse(responseCode = "404", description = "Categoría no encontrada")
     })
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponse> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(categoryService.obtener(id));
     }
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Actualizar categoría")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Categoría actualizada"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o categoría no encontrada")
+            @ApiResponse(responseCode = "404", description = "Categoría no encontrada")
     })
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> actualizar(
@@ -64,10 +68,11 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.actualizar(id, request));
     }
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Eliminar categoría")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Categoría eliminada"),
-            @ApiResponse(responseCode = "400", description = "Categoría no encontrada")
+            @ApiResponse(responseCode = "404", description = "Categoría no encontrada")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {

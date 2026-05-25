@@ -32,6 +32,7 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Crear transacción",
             description = "Registra un nuevo ingreso o gasto")
     @ApiResponses({
@@ -45,6 +46,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.crear(request));
     }
 
+    // Un solo response → sin @ApiResponses
     @Operation(summary = "Listar transacciones",
             description = "Retorna todas las transacciones del usuario autenticado")
     @ApiResponse(responseCode = "200", description = "Lista de transacciones")
@@ -53,6 +55,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.listar());
     }
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Obtener resumen de gastos",
             description = "Retorna el total de gastos agrupados por categoría para un mes y año específicos")
     @ApiResponses({

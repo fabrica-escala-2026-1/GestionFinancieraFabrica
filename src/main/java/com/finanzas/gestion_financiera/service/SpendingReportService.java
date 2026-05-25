@@ -4,6 +4,7 @@ import com.finanzas.gestion_financiera.dto.*;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.TransactionRepository;
 import com.finanzas.gestion_financiera.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -58,9 +59,13 @@ public class SpendingReportService {
                     "No hay datos suficientes para generar un reporte en este período");
         }
 
-        List<String> allCategories = initialExpenses.stream()
-                .map(GastoPorCategoriaResponse::getCategoria)
-                .collect(Collectors.toList());
+        // Unir todas las categorías de ambos meses — toList() es inmutable
+        // así que usamos ArrayList para poder agregar elementos
+        List<String> allCategories = new java.util.ArrayList<>(
+                initialExpenses.stream()
+                        .map(GastoPorCategoriaResponse::getCategoria)
+                        .toList()
+        );
 
         finalExpenses.stream()
                 .map(GastoPorCategoriaResponse::getCategoria)
@@ -92,7 +97,7 @@ public class SpendingReportService {
                             cat, initialAmount, finalAmount,
                             differenceCOP, differencePercentage);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         return new ComparativeReportResponse(
                 initialYear, initialMonth, finalYear, finalMonth, rows, null);
@@ -147,6 +152,6 @@ public class SpendingReportService {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
     }
 }

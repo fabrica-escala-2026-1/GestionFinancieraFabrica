@@ -21,11 +21,13 @@ public class AuthController {
 
     private final AuthService authService;
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Registrar usuario",
             description = "Crea una nueva cuenta de usuario")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuario registrado correctamente"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o email ya registrado")
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "409", description = "Email ya registrado")
     })
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
@@ -33,11 +35,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.register(request));
     }
 
+    // Múltiples responses → se mantiene @ApiResponses
     @Operation(summary = "Iniciar sesión",
             description = "Autentica al usuario y retorna un token JWT")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login exitoso"),
-            @ApiResponse(responseCode = "400", description = "Credenciales inválidas")
+            @ApiResponse(responseCode = "401", description = "Credenciales inválidas")
     })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
