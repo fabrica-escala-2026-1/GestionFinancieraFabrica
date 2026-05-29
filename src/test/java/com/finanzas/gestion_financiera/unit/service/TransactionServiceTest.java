@@ -72,7 +72,6 @@ class TransactionServiceTest {
         testCategory = new Category();
         testCategory.setId(10L);
         testCategory.setNombre("Salario");
-        testCategory.setTipo(Category.TipoCategoria.INGRESO);
         testCategory.setUsuario(testUser);
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User
@@ -127,7 +126,6 @@ class TransactionServiceTest {
             Category expenseCategory = new Category();
             expenseCategory.setId(20L);
             expenseCategory.setNombre("Alimentación");
-            expenseCategory.setTipo(Category.TipoCategoria.GASTO);
 
             TransactionRequest request = new TransactionRequest();
             request.setTipo("GASTO");

@@ -1,7 +1,6 @@
 package com.finanzas.gestion_financiera.unit.service;
 
 import com.finanzas.gestion_financiera.entity.Category;
-import com.finanzas.gestion_financiera.entity.Category.TipoCategoria;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
 import com.finanzas.gestion_financiera.service.CategoryInitService;
@@ -47,7 +46,7 @@ class CategoryInitServiceTest {
     }
 
     @Test
-    @DisplayName("Should create 4 INGRESO type categories")
+    @DisplayName("Should create the 4 expected income categories")
     void shouldCreate4IngresoCategories() {
         User user = new User();
         user.setId(1L);
@@ -55,14 +54,15 @@ class CategoryInitServiceTest {
         categoryInitService.crearCategoriasPorDefecto(user);
 
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
+        List<String> incomeNames = List.of("Salario", "Freelance", "Inversiones", "Otros ingresos");
         long incomeCount = categoriesCaptor.getValue().stream()
-                .filter(c -> c.getTipo() == TipoCategoria.INGRESO)
+                .filter(c -> incomeNames.contains(c.getNombre()))
                 .count();
         assertEquals(4, incomeCount);
     }
 
     @Test
-    @DisplayName("Should create 6 GASTO type categories")
+    @DisplayName("Should create the 6 expected expense categories")
     void shouldCreate6GastoCategories() {
         User user = new User();
         user.setId(1L);
@@ -70,8 +70,9 @@ class CategoryInitServiceTest {
         categoryInitService.crearCategoriasPorDefecto(user);
 
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
+        List<String> expenseNames = List.of("Alimentación", "Transporte", "Vivienda", "Salud", "Entretenimiento", "Educación");
         long expenseCount = categoriesCaptor.getValue().stream()
-                .filter(c -> c.getTipo() == TipoCategoria.GASTO)
+                .filter(c -> expenseNames.contains(c.getNombre()))
                 .count();
         assertEquals(6, expenseCount);
     }
@@ -101,7 +102,6 @@ class CategoryInitServiceTest {
 
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
         List<String> names = categoriesCaptor.getValue().stream()
-                .filter(c -> c.getTipo() == TipoCategoria.INGRESO)
                 .map(Category::getNombre)
                 .toList();
         assertTrue(names.contains("Salario"));
@@ -120,7 +120,6 @@ class CategoryInitServiceTest {
 
         verify(categoryRepository).saveAll(categoriesCaptor.capture());
         List<String> names = categoriesCaptor.getValue().stream()
-                .filter(c -> c.getTipo() == TipoCategoria.GASTO)
                 .map(Category::getNombre)
                 .toList();
         assertTrue(names.contains("Alimentación"));

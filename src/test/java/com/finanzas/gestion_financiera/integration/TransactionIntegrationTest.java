@@ -61,10 +61,9 @@ class TransactionIntegrationTest {
         testUser.setContrasena("123456");
         userRepository.save(testUser);
 
-        // 2. Crear la categoría de tipo GASTO
+        // 2. Crear la categoría
         testCategory = new Category();
         testCategory.setNombre("Alimentación");
-        testCategory.setTipo(Category.TipoCategoria.GASTO);
         testCategory.setUsuario(testUser);
         categoryRepository.save(testCategory);
 
@@ -75,10 +74,9 @@ class TransactionIntegrationTest {
     @WithMockUser(username = "test@email.com")
     @DisplayName("POST /api/v1/transacciones - Crear transacción de ingreso exitosa")
     void crearTransaccion_IngresoExitoso() throws Exception {
-        // Crear categoría de tipo INGRESO
+        // Crear otra categoría
         Category ingresoCategory = new Category();
         ingresoCategory.setNombre("Salario");
-        ingresoCategory.setTipo(Category.TipoCategoria.INGRESO);
         ingresoCategory.setUsuario(testUser);
         categoryRepository.save(ingresoCategory);
 

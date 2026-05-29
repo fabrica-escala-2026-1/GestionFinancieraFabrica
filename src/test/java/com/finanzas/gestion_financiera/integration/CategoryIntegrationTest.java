@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finanzas.gestion_financiera.controller.CategoryController;
 import com.finanzas.gestion_financiera.dto.CategoryRequest;
 import com.finanzas.gestion_financiera.dto.CategoryResponse;
-import com.finanzas.gestion_financiera.entity.Category.TipoCategoria;
 import com.finanzas.gestion_financiera.service.CategoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,9 +48,8 @@ class CategoryIntegrationTest {
     void crearCategoria_Exito() throws Exception {
         CategoryRequest request = new CategoryRequest();
         request.setNombre("Bonificación");
-        request.setTipo(TipoCategoria.INGRESO);
 
-        CategoryResponse response = new CategoryResponse(1L, "Bonificación", TipoCategoria.INGRESO);
+        CategoryResponse response = new CategoryResponse(1L, "Bonificación");
         when(categoryService.crear(any(CategoryRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/categorias")
@@ -59,8 +57,7 @@ class CategoryIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.nombre").value("Bonificación"))
-                .andExpect(jsonPath("$.tipo").value("INGRESO"));
+                .andExpect(jsonPath("$.nombre").value("Bonificación"));
     }
 
     @Test // CF-02
@@ -68,7 +65,6 @@ class CategoryIntegrationTest {
     void crearCategoria_NombreVacio() throws Exception {
         CategoryRequest request = new CategoryRequest();
         request.setNombre("");
-        request.setTipo(TipoCategoria.GASTO);
 
         mockMvc.perform(post("/api/v1/categorias")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -76,25 +72,12 @@ class CategoryIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test // CF-03
-    @DisplayName("POST /api/v1/categorias - Error por tipo ausente")
-    void crearCategoria_TipoAusente() throws Exception {
-        String json = """
-                {"nombre": "Test"}
-                """;
-
-        mockMvc.perform(post("/api/v1/categorias")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andExpect(status().isBadRequest());
-    }
-
     @Test // CF-04
     @DisplayName("GET /api/v1/categorias - Listar categorías del usuario autenticado")
     void listarCategorias_Exito() throws Exception {
         List<CategoryResponse> categories = List.of(
-                new CategoryResponse(1L, "Salario", TipoCategoria.INGRESO),
-                new CategoryResponse(2L, "Alimentación", TipoCategoria.GASTO));
+                new CategoryResponse(1L, "Salario"),
+                new CategoryResponse(2L, "Alimentación"));
         when(categoryService.listar()).thenReturn(categories);
 
         mockMvc.perform(get("/api/v1/categorias"))
@@ -107,7 +90,7 @@ class CategoryIntegrationTest {
     @Test // CF-05
     @DisplayName("GET /api/v1/categorias/{id} - Obtener categoría por ID")
     void obtenerCategoria_Exito() throws Exception {
-        CategoryResponse response = new CategoryResponse(5L, "Transporte", TipoCategoria.GASTO);
+        CategoryResponse response = new CategoryResponse(5L, "Transporte");
         when(categoryService.obtener(5L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/categorias/5"))
@@ -121,9 +104,8 @@ class CategoryIntegrationTest {
     void actualizarCategoria_Exito() throws Exception {
         CategoryRequest request = new CategoryRequest();
         request.setNombre("Nombre Actualizado");
-        request.setTipo(TipoCategoria.INGRESO);
 
-        CategoryResponse response = new CategoryResponse(3L, "Nombre Actualizado", TipoCategoria.INGRESO);
+        CategoryResponse response = new CategoryResponse(3L, "Nombre Actualizado");
         when(categoryService.actualizar(eq(3L), any(CategoryRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/categorias/3")
@@ -137,7 +119,7 @@ class CategoryIntegrationTest {
     @DisplayName("PUT /api/v1/categorias/{id} - Error por payload inválido")
     void actualizarCategoria_PayloadInvalido() throws Exception {
         String json = """
-                {"nombre": "", "tipo": null}
+                {"nombre": ""}
                 """;
 
         mockMvc.perform(put("/api/v1/categorias/3")

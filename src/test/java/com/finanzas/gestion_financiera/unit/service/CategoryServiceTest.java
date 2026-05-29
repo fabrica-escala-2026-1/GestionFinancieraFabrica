@@ -3,7 +3,6 @@ package com.finanzas.gestion_financiera.unit.service;
 import com.finanzas.gestion_financiera.dto.CategoryRequest;
 import com.finanzas.gestion_financiera.dto.CategoryResponse;
 import com.finanzas.gestion_financiera.entity.Category;
-import com.finanzas.gestion_financiera.entity.Category.TipoCategoria;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
 import com.finanzas.gestion_financiera.repository.UserRepository;
@@ -73,11 +72,10 @@ class CategoryServiceTest {
     class Create {
 
         @Test
-        @DisplayName("Should create an INGRESO type category correctly")
+        @DisplayName("Should create a category correctly")
         void shouldCreateIncomeCategory() {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Bonificación");
-            request.setTipo(TipoCategoria.INGRESO);
 
             when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> {
                 Category c = invocation.getArgument(0);
@@ -89,16 +87,14 @@ class CategoryServiceTest {
 
             assertNotNull(response);
             assertEquals("Bonificación", response.getNombre());
-            assertEquals(TipoCategoria.INGRESO, response.getTipo());
             verify(categoryRepository).save(any(Category.class));
         }
 
         @Test
-        @DisplayName("Should create a GASTO type category correctly")
+        @DisplayName("Should create another category correctly")
         void shouldCreateExpenseCategory() {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Restaurantes");
-            request.setTipo(TipoCategoria.GASTO);
 
             when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> {
                 Category c = invocation.getArgument(0);
@@ -109,7 +105,6 @@ class CategoryServiceTest {
             CategoryResponse response = categoryService.crear(request);
 
             assertEquals("Restaurantes", response.getNombre());
-            assertEquals(TipoCategoria.GASTO, response.getTipo());
         }
     }
 
@@ -123,13 +118,11 @@ class CategoryServiceTest {
             Category cat1 = new Category();
             cat1.setId(1L);
             cat1.setNombre("Salario");
-            cat1.setTipo(TipoCategoria.INGRESO);
             cat1.setUsuario(testUser);
 
             Category cat2 = new Category();
             cat2.setId(2L);
             cat2.setNombre("Alimentación");
-            cat2.setTipo(TipoCategoria.GASTO);
             cat2.setUsuario(testUser);
 
             when(categoryRepository.findByUsuarioId(1L)).thenReturn(List.of(cat1, cat2));
@@ -162,7 +155,6 @@ class CategoryServiceTest {
             Category category = new Category();
             category.setId(5L);
             category.setNombre("Transporte");
-            category.setTipo(TipoCategoria.GASTO);
             category.setUsuario(testUser);
 
             when(categoryRepository.findByIdAndUsuarioId(5L, 1L)).thenReturn(Optional.of(category));
@@ -171,7 +163,6 @@ class CategoryServiceTest {
 
             assertEquals(5L, response.getId());
             assertEquals("Transporte", response.getNombre());
-            assertEquals(TipoCategoria.GASTO, response.getTipo());
         }
 
         @Test
@@ -190,17 +181,15 @@ class CategoryServiceTest {
     class Update {
 
         @Test
-        @DisplayName("Should update name and type of an existing category")
+        @DisplayName("Should update the name of an existing category")
         void shouldUpdateCategory() {
             Category existing = new Category();
             existing.setId(3L);
             existing.setNombre("Vieja");
-            existing.setTipo(TipoCategoria.GASTO);
             existing.setUsuario(testUser);
 
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Nueva");
-            request.setTipo(TipoCategoria.INGRESO);
 
             when(categoryRepository.findByIdAndUsuarioId(3L, 1L)).thenReturn(Optional.of(existing));
             when(categoryRepository.save(any(Category.class))).thenAnswer(i -> i.getArgument(0));
@@ -208,7 +197,6 @@ class CategoryServiceTest {
             CategoryResponse response = categoryService.actualizar(3L, request);
 
             assertEquals("Nueva", response.getNombre());
-            assertEquals(TipoCategoria.INGRESO, response.getTipo());
             verify(categoryRepository).save(existing);
         }
 
@@ -217,7 +205,6 @@ class CategoryServiceTest {
         void shouldThrowExceptionWhenUpdatingNonexistent() {
             CategoryRequest request = new CategoryRequest();
             request.setNombre("Test");
-            request.setTipo(TipoCategoria.GASTO);
 
             when(categoryRepository.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
 
@@ -236,7 +223,6 @@ class CategoryServiceTest {
             Category category = new Category();
             category.setId(4L);
             category.setNombre("Temporal");
-            category.setTipo(TipoCategoria.GASTO);
             category.setUsuario(testUser);
 
             when(categoryRepository.findByIdAndUsuarioId(4L, 1L)).thenReturn(Optional.of(category));

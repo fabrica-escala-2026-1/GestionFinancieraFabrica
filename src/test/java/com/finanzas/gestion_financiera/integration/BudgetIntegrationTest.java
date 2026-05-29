@@ -74,7 +74,6 @@ class BudgetIntegrationTest {
         // 2. Crear la categoría
         testCategory = new Category();
         testCategory.setNombre("Alimentación");
-        testCategory.setTipo(Category.TipoCategoria.GASTO);
         testCategory.setUsuario(testUser);
         categoryRepository.save(testCategory);
 

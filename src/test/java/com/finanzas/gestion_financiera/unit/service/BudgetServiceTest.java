@@ -5,7 +5,6 @@ import com.finanzas.gestion_financiera.dto.BudgetRequest;
 import com.finanzas.gestion_financiera.dto.BudgetResponse;
 import com.finanzas.gestion_financiera.entity.Budget;
 import com.finanzas.gestion_financiera.entity.Category;
-import com.finanzas.gestion_financiera.entity.Category.TipoCategoria;
 import com.finanzas.gestion_financiera.entity.User;
 import com.finanzas.gestion_financiera.repository.BudgetRepository;
 import com.finanzas.gestion_financiera.repository.CategoryRepository;
@@ -68,7 +67,6 @@ class BudgetServiceTest {
         expenseCategory = new Category();
         expenseCategory.setId(10L);
         expenseCategory.setNombre("Alimentación");
-        expenseCategory.setTipo(TipoCategoria.GASTO);
         expenseCategory.setUsuario(testUser);
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User
@@ -199,7 +197,6 @@ class BudgetServiceTest {
             Category otherCategory = new Category();
             otherCategory.setId(11L);
             otherCategory.setNombre("Transporte");
-            otherCategory.setTipo(TipoCategoria.GASTO);
             otherCategory.setUsuario(testUser);
 
             Budget b2 = new Budget();
@@ -462,32 +459,6 @@ class BudgetServiceTest {
             assertNull(comp.getDisponible());
             assertNull(comp.getPorcentaje());
             assertNull(comp.getAlerta());
-        }
-
-        @Test
-        @DisplayName("Should exclude INGRESO type categories from the comparison")
-        void shouldExcludeIncomeCategories() {
-            Category incomeCategory = new Category();
-            incomeCategory.setId(50L);
-            incomeCategory.setNombre("Salario");
-            incomeCategory.setTipo(TipoCategoria.INGRESO);
-            incomeCategory.setUsuario(testUser);
-
-            when(categoryRepository.findByUsuarioId(1L))
-                    .thenReturn(List.of(expenseCategory, incomeCategory));
-            when(budgetRepository.findActiveBudgetForCategoryAndMonth(
-                    eq(10L), anyInt(), anyInt()))
-                    .thenReturn(Optional.empty());
-            when(transactionRepository.sumGastosByCategoryAndPeriod(
-                    eq(10L), eq(1L), any(LocalDate.class), any(LocalDate.class)))
-                    .thenReturn(BigDecimal.ZERO);
-
-            List<BudgetComparisonResponse> result = budgetService.comparativa();
-
-            assertEquals(1, result.size());
-            assertEquals("Alimentación", result.get(0).getCategoriaNombre());
-            verify(transactionRepository, never()).sumGastosByCategoryAndPeriod(
-                    eq(50L), any(), any(), any());
         }
 
         @Test
