@@ -36,7 +36,7 @@ public class BudgetService {
 
         Category category = categoryRepository
                 .findByIdAndUsuarioId(request.getCategoryId(), user.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Categoría no válida"));
+                .orElseThrow(() -> new IllegalArgumentException("Categoría no válida"));
 
         YearMonth now = YearMonth.now();
         int currentMonth = now.getMonthValue();
@@ -79,7 +79,7 @@ public class BudgetService {
 
         Category category = categoryRepository
                 .findByIdAndUsuarioId(request.getCategoryId(), user.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Categoría no válida"));
+                .orElseThrow(() -> new IllegalArgumentException("Categoría no válida"));
 
         budget.setCategory(category);
         budget.setAmount(request.getAmount());
