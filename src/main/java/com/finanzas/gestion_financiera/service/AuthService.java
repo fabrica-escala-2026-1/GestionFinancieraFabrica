@@ -23,7 +23,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new DuplicateKeyException("El nombre de usuario ya se encuentra registrado");
+            throw new DuplicateKeyException("El email ya se encuentra registrado");
         }
 
         User user = new User();
