@@ -14,21 +14,11 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
 
     Optional<Budget> findByIdAndCategoryUsuarioId(Long id, Long usuarioId);
 
-    // Verifica si ya existe un presupuesto activo para esa categoría
-    // que se solape con el período solicitado
     @Query("""
         SELECT COUNT(b) > 0 FROM Budget b
         WHERE b.category.id = :categoryId
-        AND (
-            (b.startYear * 12 + b.startMonth)
-            <=
-            (:endYear * 12 + :endMonth)
-        )
-        AND (
-            (b.startYear * 12 + b.startMonth + b.durationMonths)
-            >=
-            (:startYear * 12 + :startMonth)
-        )
+        AND (b.startYear * 12 + b.startMonth) <= (:endYear * 12 + :endMonth)
+        AND (b.startYear * 12 + b.startMonth + b.durationMonths) >= (:startYear * 12 + :startMonth)
     """)
     boolean existsActiveBudgetForCategory(
             @Param("categoryId") Long categoryId,
@@ -37,7 +27,6 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             @Param("endMonth") int endMonth,
             @Param("endYear") int endYear);
 
-    // Busca el presupuesto activo para una categoría en un mes/año específico
     @Query("""
         SELECT b FROM Budget b
         WHERE b.category.id = :categoryId
@@ -48,4 +37,11 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             @Param("categoryId") Long categoryId,
             @Param("month") int month,
             @Param("year") int year);
+
+    @Query("SELECT b FROM Budget b WHERE b.category.usuario.id = :userId " +
+            "AND b.startYear = :year AND b.startMonth = :month")
+    List<Budget> findAllActiveByUserAndMonth(
+            @Param("userId") Long userId,
+            @Param("year") Integer year,
+            @Param("month") Integer month);
 }

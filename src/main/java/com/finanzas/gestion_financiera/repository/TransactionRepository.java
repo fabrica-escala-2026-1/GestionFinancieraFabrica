@@ -42,6 +42,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("endDate") LocalDate endDate
     );
 
+    // Suma total de ingresos o gastos por mes
     @Query("""
     SELECT COALESCE(SUM(t.monto), 0)
     FROM Transaction t
@@ -56,4 +57,36 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+
+
+
+
+    // Top 3 categorías con mayor gasto en un período
+    @Query("SELECT t.categoria.nombre, SUM(t.monto) as total " +
+            "FROM Transaction t " +
+            "WHERE t.usuario.id = :userId " +
+            "AND t.tipo = 'GASTO' " +
+            "AND t.fecha >= :startDate " +
+            "AND t.fecha <= :endDate " +
+            "GROUP BY t.categoria.nombre " +
+            "ORDER BY total DESC")
+    List<Object[]> findTop3CategoriasByGasto(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    // Fecha de la primera transacción del usuario
+    @Query("SELECT MIN(t.fecha) FROM Transaction t WHERE t.usuario.id = :userId")
+    LocalDate findFechaFirstTransaction(@Param("userId") Long userId);
+
+    //Encuentra la ultima transaccion del usuario
+    @Query("""
+    SELECT MAX(t.fecha)
+    FROM Transaction t
+    WHERE t.usuario.id = :userId
+""")
+    LocalDate findLastTransactionDate(@Param("userId") Long userId);
+
 }
+
